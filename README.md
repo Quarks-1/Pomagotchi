@@ -1,16 +1,6 @@
 # Pomagotchi
 
-A virtual pet project combining the charm of Tamagotchi with productivity features.
-
-## Getting Started
-
-This project is currently in development.
-
-## Features
-
-- [ ] Virtual pet care
-- [ ] Productivity tracking
-- [ ] Interactive gameplay
+Tamagotchi for a certain pommy
 
 ## Installation
 
