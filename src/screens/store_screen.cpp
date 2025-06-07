@@ -1,0 +1,30 @@
+#include "../screens.h"
+#include "../sprites.h"
+
+void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
+    static bool firstDraw = true;
+    
+    if (firstDraw) {
+        display.clearScreen();
+        display.fillScreen(GxEPD_WHITE);
+        firstDraw = false;
+    }
+    
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeMonoBold9pt7b);
+    
+    // Title
+    display.setCursor(10, 20);
+    display.println("Store");
+    
+    // Instructions
+    display.setCursor(10, 50);
+    display.println("Buy items for");
+    display.setCursor(10, 70);
+    display.println("your pet");
+    
+    // Draw store icon in the center
+    display.drawBitmap(92, 100, storeBitmap, 16, 16, GxEPD_BLACK);
+    
+    display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
+} 
