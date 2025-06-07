@@ -61,6 +61,10 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     int y = 100;
     int w = idleFrames[idleFrame][0];
     int h = idleFrames[idleFrame][1];
+    
+    // Clear the animation area before drawing the new frame
+    display.fillRect(x, y, w, h, GxEPD_WHITE);
+    
     display.drawBitmap(x, y, &idleFrames[idleFrame][2], w, h, GxEPD_BLACK);
     
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);

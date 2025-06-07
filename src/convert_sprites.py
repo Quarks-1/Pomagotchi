@@ -4,33 +4,27 @@ from PIL import Image
 import struct
 
 def convert_png_to_bmp(png_path, bmp_path):
-    # Convert PNG to 1-bit BMP with white background, inverted colors, and flipped vertically
-    cmd = f"convert {png_path} -background white -alpha remove -alpha off -negate -flip -threshold 50% -type bilevel BMP3:{bmp_path}"
+    # Convert PNG to 1-bit BMP: flatten, scale, threshold, invert, flip
+    cmd = f"convert {png_path} -background white -alpha remove -alpha off -scale 200% -threshold 50% -negate -flip -type bilevel BMP3:{bmp_path}"
     subprocess.run(cmd, shell=True, check=True)
 
 def read_bmp_to_array(bmp_path):
     with open(bmp_path, 'rb') as f:
-        # Read BMP header
         header = f.read(54)
         width = struct.unpack('<I', header[18:22])[0]
         height = struct.unpack('<I', header[22:26])[0]
-        
-        # Calculate row padding
-        row_size = (width + 7) // 8
-        padding = (4 - (row_size % 4)) % 4
-        
-        # Read pixel data
+        pixel_offset = struct.unpack('<I', header[10:14])[0]
+
+        row_bytes = (width + 7) // 8
+        row_size_padded = ((width + 31) // 32) * 4
+
+        f.seek(pixel_offset)
+
         pixels = []
         for _ in range(height):
-            row = []
-            for _ in range(row_size):
-                byte = f.read(1)
-                if not byte:
-                    break
-                row.append(ord(byte))
+            row_data = f.read(row_size_padded)
+            row = list(row_data[:row_bytes])
             pixels.append(row)
-            f.seek(padding, 1)  # Skip padding
-        
         return width, height, pixels
 
 def generate_cpp_array(name, width, height, pixels):
@@ -77,6 +71,10 @@ def main():
         
         # Read BMP and generate array
         width, height, pixels = read_bmp_to_array(bmp_path)
+        # 🧪 Debug: Print bitmap as binary matrix
+        print(f"Visual Debug: {png_file} ({width}x{height})")
+        for row in pixels:
+            print("".join(f"{byte:08b}" for byte in row))
         array_name = png_file.replace('.png', '').replace('-', '_')
         array_data = generate_cpp_array(array_name, width, height, pixels)
         
