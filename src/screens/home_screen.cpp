@@ -1,24 +1,31 @@
 #include "../screens.h"
 #include "../sprites.h"
 #include "../pet_state.h"
+#include "../animations.h"
+
+// Global animation state
+static AnimationState petAnimation;
 
 void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
-    // Only clear and fill screen on first draw
     static bool firstDraw = true;
+    
     if (firstDraw) {
         display.clearScreen();
-        display.fillScreen(GxEPD_WHITE);  // Set background to white
+        display.fillScreen(GxEPD_WHITE);
         firstDraw = false;
+        
+        // Initialize animation
+        initAnimation(petAnimation, ANIM_RUN);
     }
     
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
     
-    // Draw title
+    // Title
     display.setCursor(10, 20);
     display.println("Pomagotchi");
     
-    // Draw status
+    // Status
     display.setCursor(10, 50);
     display.println("Status:");
     
@@ -36,9 +43,9 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     display.print(thirst);
     display.println("%");
     
-    // Draw pomeranian sprite in the center
-    display.drawBitmap(92, 100, pomeranianBitmap, 16, 16, GxEPD_BLACK);
+    // Update and draw animation
+    updateAnimation(petAnimation);
+    drawAnimationFrame<GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>>(display, petAnimation, 92, 100);
     
-    // Use partial refresh for updates
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
 } 

@@ -37,5 +37,15 @@ const unsigned char homeBitmap[] PROGMEM = {
     0x07, 0xF0, 0x0F, 0xF8, 0x1F, 0xFC, 0x3F, 0xFE,
     0x7F, 0xFF, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80,
     0x00, 0x80, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00
-}; 
+};
+
+// Sprite arrays for each animation
+extern const unsigned char* idle1[];
+extern const unsigned char* idle2[];
+extern const unsigned char* jump[];
+extern const unsigned char* run[];
+extern const unsigned char* sit[];
+extern const unsigned char* sniff[];
+extern const unsigned char* sniff_and_walk[];
+extern const unsigned char* walk[]; 
 
