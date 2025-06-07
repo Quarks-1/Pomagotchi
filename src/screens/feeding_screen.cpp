@@ -23,8 +23,6 @@ void drawFeedingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display)
     display.setCursor(10, 70);
     display.println("feed your pet");
     
-    // Draw food bowl sprite in the center
-    display.drawBitmap(92, 100, foodBowlBitmap, 16, 16, GxEPD_BLACK);
     
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
 } 
