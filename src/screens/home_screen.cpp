@@ -4,6 +4,7 @@
 #include "../animation.h"
 #include "../ui_components.h"
 #include "../ui_config.h"
+#include "../cursor.h"
 
 // Removed unused global animation state
 // static AnimationState petAnimation;
@@ -42,9 +43,9 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     drawIcon(display, 170, 40, 20, 20, IconType::LIGHTNING);
     drawStatusBar(display, 170, 70, 20, 80, getBatteryLevel(), UIConfig::CORNER_RADIUS);
 
-    // Change screen button
-    drawChangeScreenButton(display, 10, 170, 90, 30, "left", false, 3, 3, UIConfig::CORNER_RADIUS);
-    drawChangeScreenButton(display, 110, 170, 90, 30, "right", true, 3, 3, UIConfig::CORNER_RADIUS);
+    // Change screen buttons with cursor selection
+    drawChangeScreenButton(display, 10, 170, 90, 30, "left", cursorPosition == 0, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 110, 170, 90, 30, "right", cursorPosition == 1, 3, 3, UIConfig::CORNER_RADIUS);
     
     // Draw current animation frame
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
