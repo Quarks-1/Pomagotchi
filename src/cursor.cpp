@@ -38,6 +38,18 @@ static PageElements feedingPageElements = {
         // Up navigation button
         {90, 170, 30, 30, "Enter feeding"},
         // Right navigation button
+        {115, 170, 85, 30, "Go to pet pommy"}
+    },
+    .count = 3
+};
+
+static PageElements petPommyPageElements = {
+    .elements = {
+        // Left navigation button
+        {10, 170, 85, 30, "Go to feeding"},
+        // Up navigation button
+        {90, 170, 30, 30, "Pet pommy"},
+        // Right navigation button
         {115, 170, 85, 30, "Go to store"}
     },
     .count = 3
@@ -46,7 +58,7 @@ static PageElements feedingPageElements = {
 static PageElements storePageElements = {
     .elements = {
         // Left navigation button
-        {10, 170, 85, 30, "Go to feeding"},
+        {10, 170, 85, 30, "Go to pet pommy"},
         // Up navigation button
         {90, 170, 30, 30, "Enter store"},
         // Right navigation button
@@ -64,6 +76,8 @@ static PageElements* getCurrentPageElements() {
             return &waterPageElements;
         case FEEDING_PAGE:
             return &feedingPageElements;
+        case PET_POMMY_PAGE:
+            return &petPommyPageElements;
         case STORE_PAGE:
             return &storePageElements;
         default:
@@ -129,13 +143,23 @@ void handleCursorSelection() {
                 } else if (cursorPosition == 1) {
                     // TODO: Implement feeding action
                 } else if (cursorPosition == 2) {
+                    changePage(PET_POMMY_PAGE);
+                }
+                break;
+
+            case PET_POMMY_PAGE:
+                if (cursorPosition == 0) {
+                    changePage(FEEDING_PAGE);
+                } else if (cursorPosition == 1) {
+                    // TODO: Implement pet pommy action
+                } else if (cursorPosition == 2) {
                     changePage(STORE_PAGE);
                 }
                 break;
                 
             case STORE_PAGE:
                 if (cursorPosition == 0) {
-                    changePage(FEEDING_PAGE);
+                    changePage(PET_POMMY_PAGE);
                 } else if (cursorPosition == 1) {
                     // TODO: Implement store action
                 } else if (cursorPosition == 2) {

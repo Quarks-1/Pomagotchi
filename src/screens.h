@@ -13,6 +13,7 @@ enum Page {
     HOME_PAGE,
     DRINK_WATER_PAGE,
     FEEDING_PAGE,
+    PET_POMMY_PAGE,
     STORE_PAGE
 };
 
@@ -20,4 +21,5 @@ enum Page {
 void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display);
 void drawDrinkWaterPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display);
 void drawFeedingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display);
+void drawPetPommyPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display);
 void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display); 

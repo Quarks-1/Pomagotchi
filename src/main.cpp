@@ -90,13 +90,13 @@ void setup() {
     initializeCursor();
     
     // Set initial page to home
-    currentPage = DRINK_WATER_PAGE;
-    previousPage = DRINK_WATER_PAGE;
-    Serial.println("Starting at Water Page");
+    currentPage = PET_POMMY_PAGE;
+    previousPage = PET_POMMY_PAGE;
+    Serial.println("Starting at Pet Pommy Page");
     
     // Draw initial page
-    drawDrinkWaterPage(display);
-    Serial.println("Water Page drawn successfully");
+    drawPetPommyPage(display);
+    Serial.println("Pet Pommy Page drawn successfully");
 }
 
 void loop() {
@@ -135,28 +135,27 @@ void changePage(Page newPage) {
         // Reset logged message state when changing pages
         resetLoggedMessage();
         
-        // Determine navigation direction
-        bool isRightNavigation = false;
+        // Set cursor position based on the navigation flow
         switch (currentPage) {
             case HOME_PAGE:
-                isRightNavigation = (newPage == DRINK_WATER_PAGE);
+                cursorPosition = (newPage == STORE_PAGE) ? 2 : 0;
                 break;
             case DRINK_WATER_PAGE:
-                isRightNavigation = (newPage == FEEDING_PAGE);
+                cursorPosition = (newPage == HOME_PAGE) ? 1 : 0;
                 break;
             case FEEDING_PAGE:
-                isRightNavigation = (newPage == STORE_PAGE);
+                cursorPosition = (newPage == DRINK_WATER_PAGE) ? 2 : 0;
+                break;
+            case PET_POMMY_PAGE:
+                cursorPosition = (newPage == FEEDING_PAGE) ? 2 : 0;
                 break;
             case STORE_PAGE:
-                isRightNavigation = (newPage == HOME_PAGE);
+                cursorPosition = (newPage == PET_POMMY_PAGE) ? 2 : 0;
                 break;
         }
 
         previousPage = currentPage;
         currentPage = newPage;
-        
-        // Set cursor position based on navigation direction
-        cursorPosition = isRightNavigation ? 0 : 1;
         
         // Full refresh when changing pages
         display.clearScreen();
@@ -172,6 +171,9 @@ void changePage(Page newPage) {
                 break;
             case FEEDING_PAGE:
                 drawFeedingPage(display);
+                break;
+            case PET_POMMY_PAGE:
+                drawPetPommyPage(display);
                 break;
             case STORE_PAGE:
                 drawStorePage(display);
@@ -286,6 +288,9 @@ void updateDisplay() {
             break;
         case FEEDING_PAGE:
             drawFeedingPage(display);
+            break;
+        case PET_POMMY_PAGE:
+            drawPetPommyPage(display);
             break;
         case STORE_PAGE:
             drawStorePage(display);
