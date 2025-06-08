@@ -33,6 +33,7 @@ struct AnimationState {
     AnimationType currentType;
     int currentFrame;
     unsigned long lastFrameTime;
+    bool loop;  // Controls whether animation plays back-and-forth
 };
 
 // Function declarations

@@ -8,7 +8,7 @@
 
 void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
-    static AnimationState petAnimation = {AnimationType::IDLE, 0, 0};
+    static AnimationState petAnimation = {AnimationType::IDLE, 0, 0, true};
     
     if (firstDraw) {
         display.clearScreen();

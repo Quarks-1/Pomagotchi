@@ -135,7 +135,25 @@ void updateAnimation(AnimationState& state) {
     const AnimationSequence& sequence = getAnimationSequence(state.currentType);
     unsigned long now = millis();
     if (now - state.lastFrameTime >= sequence.frameDelay) {
-        state.currentFrame = (state.currentFrame + 1) % sequence.frameCount;
+        static bool forward = true;  // Direction flag
+        
+        if (state.loop) {
+            // Back-and-forth motion
+            if (forward) {
+                state.currentFrame++;
+                if (state.currentFrame >= sequence.frameCount - 1) {
+                    forward = false;
+                }
+            } else {
+                state.currentFrame--;
+                if (state.currentFrame <= 0) {
+                    forward = true;
+                }
+            }
+        } else {
+            // Normal looping
+            state.currentFrame = (state.currentFrame + 1) % sequence.frameCount;
+        }
         state.lastFrameTime = now;
     }
 }

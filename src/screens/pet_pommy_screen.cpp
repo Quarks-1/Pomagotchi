@@ -6,9 +6,9 @@
 #include "../ui_config.h"
 #include "../cursor.h"
 
-void drawFeedingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
+void drawPetPommyPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
-    static AnimationState petAnimation = {AnimationType::SNIFF, 0, 0, true};
+    static AnimationState petAnimation = {AnimationType::SIT, 0, 0, true};
     
     if (firstDraw) {
         display.clearScreen();
@@ -22,7 +22,7 @@ void drawFeedingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display)
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
     
-    drawTitle(display, 60, 20, "Feed Pet");
+    drawTitle(display, 45, 20, "Pet Pommy");
     drawStarCluster(display, 0, 0, 32, 32);
     drawStarCluster(display, 168, 0, 32, 32);
 

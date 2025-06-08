@@ -90,13 +90,13 @@ void setup() {
     initializeCursor();
     
     // Set initial page to home
-    currentPage = PET_POMMY_PAGE;
-    previousPage = PET_POMMY_PAGE;
-    Serial.println("Starting at Pet Pommy Page");
+    currentPage = HOME_PAGE;
+    previousPage = HOME_PAGE;
+    Serial.println("Starting at Home Page");
     
     // Draw initial page
-    drawPetPommyPage(display);
-    Serial.println("Pet Pommy Page drawn successfully");
+    drawHomePage(display);
+    Serial.println("Home Page drawn successfully");
 }
 
 void loop() {
@@ -216,6 +216,10 @@ void handleInput() {
         else if (command == "feed") {
             changePage(FEEDING_PAGE);
             Serial.println("Changed to feeding page");
+        }
+        else if (command == "pet") {
+            changePage(PET_POMMY_PAGE);
+            Serial.println("Changed to pet pommy page");
         }
         else if (command == "store") {
             changePage(STORE_PAGE);
