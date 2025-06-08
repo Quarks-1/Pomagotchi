@@ -28,8 +28,22 @@ void drawDrinkWaterPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& displ
     drawStarCluster(display, 168, 0, 32, 32);
 
     // Draw water level bar
-    drawIcon(display, 135, 40, 20, 20, IconType::WATER_DROP);
-    drawStatusBar(display, 120, 70, 50, 80, getWaterFillLevel(), UIConfig::CORNER_RADIUS);
+    drawIcon(display, 155, 40, 20, 20, IconType::WATER_DROP);
+    
+    // Clear area for water amount display
+    display.fillRect(85, 60, 40, 50, GxEPD_WHITE);
+    
+    // Draw water amount in cups (stacked vertically)
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(90, 100);
+    display.print(getWaterFillLevel() * 0.1, 1);
+    display.setFont(&FreeMono9pt7b);
+    display.setCursor(90, 115);
+    display.println("cups");
+    
+    // Draw status bar moved to the right
+    drawStatusBar(display, 140, 70, 50, 80, getWaterFillLevel(), UIConfig::CORNER_RADIUS);
 
     // Draw logged message if needed
     if (shouldShowLoggedMessage()) {
