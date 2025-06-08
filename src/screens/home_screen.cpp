@@ -2,6 +2,7 @@
 #include "../sprites.h"
 #include "../pet_state.h"
 #include "../animation.h"
+#include "../ui_components.h"
 
 // Removed unused global animation state
 // static AnimationState petAnimation;
@@ -22,37 +23,27 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
     
-    // Title
-    display.setCursor(10, 20);
-    display.println("Pomagotchi");
+    drawTitle(display, 45, 20, "Pomagotchi");
+    drawStarCluster(display, 0, 0, 32, 32);
+    drawStarCluster(display, 168, 0, 32, 32);
     
-    // Status
-    display.setCursor(10, 50);
-    display.println("Status:");
+    // Draw icons and status bars
     
-    // Clear and draw hunger
-    display.fillRect(80, 58, 100, 15, GxEPD_WHITE);  // Clear hunger value area
-    display.setCursor(10, 70);
-    display.print("Hunger: ");
-    display.print(hunger);
-    display.println("%");
+    // Sunlight
+    drawIcon(display, 100, 40, 20, 20, IconType::SUN);
+    drawStatusBar(display, 100, 70, 20, 80, sunlight, 2);
     
-    // Clear and draw thirst
-    display.fillRect(80, 78, 100, 15, GxEPD_WHITE);  // Clear thirst value area
-    display.setCursor(10, 90);
-    display.print("Thirst: ");
-    display.print(thirst);
-    display.println("%");
+    // Thirst
+    drawIcon(display, 130, 40, 20, 20, IconType::WATER_DROP);
+    drawStatusBar(display, 130, 70, 20, 80, thirst, 2);
+
+    // Battery
+    drawIcon(display, 160, 40, 20, 20, IconType::LIGHTNING);
+    drawStatusBar(display, 160, 70, 20, 80, getBatteryLevel(), 2);
     
     // Draw current animation frame
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
-    int x = 25;
-    int y = 100;
-    
-    // Clear the animation area before drawing the new frame
-    display.fillRect(x, y, currentFrame.width, currentFrame.height, GxEPD_WHITE);
-    
-    display.drawBitmap(x, y, &currentFrame.data[2], currentFrame.width, currentFrame.height, GxEPD_BLACK);
+    drawAnimationFrame(display, 0, 75, currentFrame);
     
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
 } 
