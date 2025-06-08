@@ -1,6 +1,10 @@
 #pragma once
 
 #include <Arduino.h>
+#include "main.h"
+
+// Forward declarations
+void logWater(uint8_t amount);
 
 // Water logging state
 extern bool isWaterLogging;

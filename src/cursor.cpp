@@ -128,10 +128,6 @@ void handleCursorSelection() {
                 } else if (cursorPosition == 1) {
                     // Toggle water logging mode
                     toggleWaterLogging();
-                    // Update thirst level if exiting water logging mode
-                    if (!isWaterLogging) {
-                        thirst = constrain(thirst + getWaterFillLevel(), 0, 100);
-                    }
                 } else if (cursorPosition == 2) {
                     changePage(FEEDING_PAGE);
                 }

@@ -11,4 +11,7 @@ extern unsigned long lastUpdateTime;
 void updatePetState();
 
 // Get the current battery level (0-100)
-uint8_t getBatteryLevel(); 
+uint8_t getBatteryLevel();
+
+// Log water intake and update thirst level (0-100)
+void logWater(uint8_t amount); 

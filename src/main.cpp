@@ -5,6 +5,7 @@
 #include "pet_state.h"
 #include "cursor.h"
 #include "water_logging.h"
+#include "main.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     16  // RST -> GPIO16
@@ -27,6 +28,7 @@
 GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(GxEPD2_154_D67(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN));
 Page currentPage = HOME_PAGE;
 Page previousPage = HOME_PAGE;  // Track previous page for detecting changes
+bool isDebugMode = false;  // Global debug mode flag
 
 // Rotary encoder state
 volatile int8_t encoderDelta = 0;
@@ -193,7 +195,12 @@ void handleInput() {
         Serial.print("Received command: ");
         Serial.println(command);
         
-        if (command == "left") {
+        if (command == "debug") {
+            isDebugMode = !isDebugMode;
+            Serial.print("Debug mode: ");
+            Serial.println(isDebugMode ? "ON" : "OFF");
+        }
+        else if (command == "left") {
             moveCursor(-1);
             Serial.println("Moved cursor left");
         }
@@ -300,4 +307,9 @@ void updateDisplay() {
             drawStorePage(display);
             break;
     }
+}
+
+// Function to check if debug mode is active
+bool isDebugModeActive() {
+    return isDebugMode;
 } 
