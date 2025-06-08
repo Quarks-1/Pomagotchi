@@ -25,7 +25,12 @@ void drawDrinkWaterPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& displ
     drawStarCluster(display, 0, 0, 32, 32);
     drawStarCluster(display, 168, 0, 32, 32);
 
-// Draw current animation frame
+    // Change screen button
+    drawChangeScreenButton(display, 10, 170, 85, 30, "left", false, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 90, 170, 30, 30, "up", false, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 115, 170, 85, 30, "right", false, 3, 3, UIConfig::CORNER_RADIUS);
+
+    // Draw current animation frame
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
     drawAnimationFrame(display, 0, 75, currentFrame);
 

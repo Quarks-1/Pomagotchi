@@ -377,6 +377,16 @@ void drawChangeScreenButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& d
             display.drawLine(centerX + arrowSize/2, centerY - i, centerX, centerY - arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
             display.drawLine(centerX + arrowSize/2, centerY - i, centerX, centerY + arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
         }
+    } else if (strcmp(arrow_direction, "up") == 0) {
+        // Draw up arrow with thickness
+        for (uint8_t i = 0; i < arrow_thickness; i++) {
+            // Draw the vertical line (made taller by adjusting the end point)
+            display.drawLine(centerX - i, centerY + arrowSize/2, centerX - i, centerY - arrowSize/2, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            // Draw the left diagonal of the arrow head
+            display.drawLine(centerX - i, centerY - arrowSize/2, centerX - arrowSize/4 - i, centerY - arrowSize/4, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            // Draw the right diagonal of the arrow head
+            display.drawLine(centerX - i, centerY - arrowSize/2, centerX + arrowSize/4 - i, centerY - arrowSize/4, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+        }
     }
 } 
 
