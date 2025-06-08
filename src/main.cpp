@@ -39,13 +39,13 @@ void setup() {
     initializeDisplay();
     
     // Set initial page to home
-    currentPage = HOME_PAGE;
-    previousPage = HOME_PAGE;
-    Serial.println("Starting at Home Page");
+    currentPage = DRINK_WATER_PAGE;
+    previousPage = DRINK_WATER_PAGE;
+    Serial.println("Starting at Water Page");
     
     // Draw initial page
-    drawHomePage(display);
-    Serial.println("Home Page drawn successfully");
+    drawDrinkWaterPage(display);
+    Serial.println("Water Page drawn successfully");
 }
 
 void loop() {

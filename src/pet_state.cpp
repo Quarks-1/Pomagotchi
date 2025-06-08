@@ -1,4 +1,5 @@
 #include "pet_state.h"
+#include "depletion.h"
 #include <Arduino.h>
 
 // Initialize pet state variables
@@ -6,24 +7,8 @@ uint8_t sunlight = 100;  // Changed from hunger
 uint8_t thirst = 100;
 unsigned long lastUpdateTime = 0;
 
-// Constants for depletion rates
-const unsigned long SUNLIGHT_DEPLETION_INTERVAL = 1000;     // 1 second in milliseconds
-// const unsigned long SUNLIGHT_DEPLETION_INTERVAL = 7200000;  // 2 hours in milliseconds (commented out for now)
-const unsigned long THIRST_DEPLETION_INTERVAL = 500;        // 500ms for thirst
-
 void updatePetState() {
-    unsigned long currentTime = millis();
-    
-    // Update sunlight level (1% every second)
-    if (currentTime - lastUpdateTime >= SUNLIGHT_DEPLETION_INTERVAL) {
-        if (sunlight > 0) sunlight--;
-        lastUpdateTime = currentTime;
-    }
-    
-    // Update thirst level (1% every 500ms)
-    if (currentTime - lastUpdateTime >= THIRST_DEPLETION_INTERVAL) {
-        if (thirst > 0) thirst--;
-    }
+    updateDepletion(sunlight, thirst, lastUpdateTime);
 }
 
 uint8_t getBatteryLevel() {

@@ -283,5 +283,100 @@ void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
             break;
         }
     }
+}
+
+void drawChangeScreenButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                          int16_t x, int16_t y,
+                          int16_t width, int16_t height,
+                          const char* arrow_direction,
+                          bool is_selected,
+                          uint8_t border_thickness,
+                          uint8_t arrow_thickness,
+                          uint8_t corner_radius) {
+    // Clear the button area
+    display.fillRect(x, y, width, height, GxEPD_WHITE);
+    
+    // Draw rounded rectangle border with specified thickness
+    for (uint8_t i = 0; i < border_thickness; i++) {
+        // Top and bottom edges
+        display.drawFastHLine(x + corner_radius, y + i, width - (corner_radius * 2), GxEPD_BLACK);
+        display.drawFastHLine(x + corner_radius, y + height - 1 - i, width - (corner_radius * 2), GxEPD_BLACK);
+        
+        // Left and right edges
+        display.drawFastVLine(x + i, y + corner_radius, height - (corner_radius * 2), GxEPD_BLACK);
+        display.drawFastVLine(x + width - 1 - i, y + corner_radius, height - (corner_radius * 2), GxEPD_BLACK);
+        
+        // Corners
+        for (int j = 0; j < corner_radius; j++) {
+            // Top-left corner
+            if ((j + i) * (j + i) + (corner_radius - j) * (corner_radius - j) <= corner_radius * corner_radius) {
+                display.drawPixel(x + corner_radius - j, y + corner_radius - i, GxEPD_BLACK);
+            }
+            // Top-right corner
+            if ((j + i) * (j + i) + (corner_radius - j) * (corner_radius - j) <= corner_radius * corner_radius) {
+                display.drawPixel(x + width - corner_radius + j, y + corner_radius - i, GxEPD_BLACK);
+            }
+            // Bottom-left corner
+            if ((j + i) * (j + i) + (corner_radius - j) * (corner_radius - j) <= corner_radius * corner_radius) {
+                display.drawPixel(x + corner_radius - j, y + height - corner_radius + i, GxEPD_BLACK);
+            }
+            // Bottom-right corner
+            if ((j + i) * (j + i) + (corner_radius - j) * (corner_radius - j) <= corner_radius * corner_radius) {
+                display.drawPixel(x + width - corner_radius + j, y + height - corner_radius + i, GxEPD_BLACK);
+            }
+        }
+    }
+    
+    // Fill button if selected
+    if (is_selected) {
+        // Fill main rectangle
+        display.fillRect(x + border_thickness, y + border_thickness, 
+                        width - (border_thickness * 2), height - (border_thickness * 2), 
+                        GxEPD_BLACK);
+        
+        // Fill corners with black
+        for (int i = 0; i < corner_radius - border_thickness; i++) {
+            for (int j = 0; j < corner_radius - border_thickness; j++) {
+                // Top-left corner
+                if ((i + border_thickness) * (i + border_thickness) + (j + border_thickness) * (j + border_thickness) <= (corner_radius - border_thickness) * (corner_radius - border_thickness)) {
+                    display.drawPixel(x + corner_radius - j, y + corner_radius - i, GxEPD_BLACK);
+                }
+                // Top-right corner
+                if ((i + border_thickness) * (i + border_thickness) + (j + border_thickness) * (j + border_thickness) <= (corner_radius - border_thickness) * (corner_radius - border_thickness)) {
+                    display.drawPixel(x + width - corner_radius + j, y + corner_radius - i, GxEPD_BLACK);
+                }
+                // Bottom-left corner
+                if ((i + border_thickness) * (i + border_thickness) + (j + border_thickness) * (j + border_thickness) <= (corner_radius - border_thickness) * (corner_radius - border_thickness)) {
+                    display.drawPixel(x + corner_radius - j, y + height - corner_radius + i, GxEPD_BLACK);
+                }
+                // Bottom-right corner
+                if ((i + border_thickness) * (i + border_thickness) + (j + border_thickness) * (j + border_thickness) <= (corner_radius - border_thickness) * (corner_radius - border_thickness)) {
+                    display.drawPixel(x + width - corner_radius + j, y + height - corner_radius + i, GxEPD_BLACK);
+                }
+            }
+        }
+    }
+    
+    // Calculate arrow dimensions
+    int arrowSize = min(width, height) / 2;  // Size of the arrow
+    int centerX = x + width / 2;
+    int centerY = y + height / 2;
+    
+    // Draw arrow based on direction
+    if (strcmp(arrow_direction, "left") == 0) {
+        // Draw left arrow with thickness
+        for (uint8_t i = 0; i < arrow_thickness; i++) {
+            display.drawLine(centerX + arrowSize/2, centerY - i, centerX - arrowSize/2, centerY - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX - arrowSize/2, centerY - i, centerX, centerY - arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX - arrowSize/2, centerY - i, centerX, centerY + arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+        }
+    } else if (strcmp(arrow_direction, "right") == 0) {
+        // Draw right arrow with thickness
+        for (uint8_t i = 0; i < arrow_thickness; i++) {
+            display.drawLine(centerX - arrowSize/2, centerY - i, centerX + arrowSize/2, centerY - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX + arrowSize/2, centerY - i, centerX, centerY - arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX + arrowSize/2, centerY - i, centerX, centerY + arrowSize/2 - i, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+        }
+    }
 } 
 

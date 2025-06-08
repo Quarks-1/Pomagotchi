@@ -1,13 +1,13 @@
-#ifndef UI_COMPONENTS_H
-#define UI_COMPONENTS_H
+#pragma once
 
 #include <GxEPD2_BW.h>
 #include <Adafruit_GFX.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
+#include "ui_config.h"
 #include "animation.h"
 
-// Icon types available in the system
+// Icon types for status indicators
 enum class IconType {
     BATTERY,
     WATER_DROP,
@@ -17,48 +17,46 @@ enum class IconType {
     LIGHTNING
 };
 
-// Draw a rectangle with standard styling
+// Function declarations
 void drawRectangle(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, 
                   int16_t x, int16_t y, 
                   int16_t width, int16_t height,
-                  uint8_t thickness = 1,
-                  bool fill = false);
+                  uint8_t thickness,
+                  bool fill);
 
-// Draw a decorative star cluster
+void drawTitle(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, 
+              int16_t x, int16_t y, 
+              const char* text);
+
+void drawButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, 
+               int16_t x, int16_t y, 
+               const char* text);
+
+void drawStatusBar(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                  int16_t x, int16_t y,
+                  int16_t width, int16_t height,
+                  uint8_t fill,
+                  uint8_t radius = UIConfig::CORNER_RADIUS);
+
 void drawStarCluster(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
                     int16_t x, int16_t y,
                     int16_t width,
                     int16_t height);
 
-// Draw an animation frame
 void drawAnimationFrame(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
                        int16_t x, int16_t y,
                        const AnimationFrame& frame);
 
-// Draw a title with standard styling
-void drawTitle(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, int16_t x, int16_t y, const char* text);
-
-// Draw a button with standard styling
-void drawButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, int16_t x, int16_t y, const char* text);
-
-// Draw a status bar with name, icon, and level
-void drawStatusBar(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display, 
-                  int16_t x, int16_t y, 
-                  const char* name, 
-                  const uint8_t* icon, 
-                  uint8_t level);
-
-// Draw a status bar with fill level
-void drawStatusBar(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
-                  int16_t x, int16_t y,
-                  int16_t width, int16_t height,
-                  uint8_t fill,
-                  uint8_t radius = 2);
-
-// Draw an icon
 void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
              int16_t x, int16_t y,
              int16_t width, int16_t height,
              IconType icon);
 
-#endif // UI_COMPONENTS_H 
+void drawChangeScreenButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                          int16_t x, int16_t y,
+                          int16_t width, int16_t height,
+                          const char* arrow_direction,
+                          bool is_selected,
+                          uint8_t border_thickness,
+                          uint8_t arrow_thickness,
+                          uint8_t corner_radius = UIConfig::CORNER_RADIUS); 

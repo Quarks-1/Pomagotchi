@@ -3,6 +3,7 @@
 #include "../pet_state.h"
 #include "../animation.h"
 #include "../ui_components.h"
+#include "../ui_config.h"
 
 // Removed unused global animation state
 // static AnimationState petAnimation;
@@ -31,15 +32,19 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     
     // Sunlight
     drawIcon(display, 100, 40, 20, 20, IconType::SUN);
-    drawStatusBar(display, 100, 70, 20, 80, sunlight, 2);
+    drawStatusBar(display, 100, 70, 20, 80, sunlight, UIConfig::CORNER_RADIUS);
     
     // Thirst
-    drawIcon(display, 130, 40, 20, 20, IconType::WATER_DROP);
-    drawStatusBar(display, 130, 70, 20, 80, thirst, 2);
+    drawIcon(display, 135, 40, 20, 20, IconType::WATER_DROP);
+    drawStatusBar(display, 135, 70, 20, 80, thirst, UIConfig::CORNER_RADIUS);
 
     // Battery
-    drawIcon(display, 160, 40, 20, 20, IconType::LIGHTNING);
-    drawStatusBar(display, 160, 70, 20, 80, getBatteryLevel(), 2);
+    drawIcon(display, 170, 40, 20, 20, IconType::LIGHTNING);
+    drawStatusBar(display, 170, 70, 20, 80, getBatteryLevel(), UIConfig::CORNER_RADIUS);
+
+    // Change screen button
+    drawChangeScreenButton(display, 10, 170, 90, 30, "left", false, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 110, 170, 90, 30, "right", true, 3, 3, UIConfig::CORNER_RADIUS);
     
     // Draw current animation frame
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
