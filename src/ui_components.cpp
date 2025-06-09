@@ -230,12 +230,6 @@ void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
             }
             break;
         }
-        case IconType::FOOD: {
-            // Draw simple food icon (bowl)
-            display.drawRect(x, y + height/3, width, height*2/3, GxEPD_BLACK);
-            display.drawFastHLine(x, y + height/3, width, GxEPD_BLACK);
-            break;
-        }
         case IconType::LIGHTNING: {
             // Draw a simple, bold, vertical lightning bolt (classic style)
             int cx = x + width / 2;

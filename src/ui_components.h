@@ -13,7 +13,6 @@ enum class IconType {
     WATER_DROP,
     SUN,
     HEART,
-    FOOD,
     LIGHTNING
 };
 

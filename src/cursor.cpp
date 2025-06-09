@@ -4,6 +4,7 @@
 #include "navigation.h"
 #include "pet_state.h"
 #include "water_logging.h"
+#include "sunbathing.h"
 
 // Global cursor position
 uint8_t cursorPosition = 0;
@@ -26,17 +27,17 @@ static PageElements waterPageElements = {
         // Up navigation button
         {90, 170, 30, 30, "Enter water logging"},
         // Right navigation button
-        {115, 170, 85, 30, "Go to feeding"}
+        {115, 170, 85, 30, "Go to sunbathing"}
     },
     .count = 3
 };
 
-static PageElements feedingPageElements = {
+static PageElements sunbathingPageElements = {
     .elements = {
         // Left navigation button
         {10, 170, 85, 30, "Go to water page"},
         // Up navigation button
-        {90, 170, 30, 30, "Enter feeding"},
+        {90, 170, 30, 30, "Enter sunbathing"},
         // Right navigation button
         {115, 170, 85, 30, "Go to pet pommy"}
     },
@@ -46,7 +47,7 @@ static PageElements feedingPageElements = {
 static PageElements petPommyPageElements = {
     .elements = {
         // Left navigation button
-        {10, 170, 85, 30, "Go to feeding"},
+        {10, 170, 85, 30, "Go to sunbathing"},
         // Up navigation button
         {90, 170, 30, 30, "Pet pommy"},
         // Right navigation button
@@ -74,8 +75,8 @@ static PageElements* getCurrentPageElements() {
             return &homePageElements;
         case DRINK_WATER_PAGE:
             return &waterPageElements;
-        case FEEDING_PAGE:
-            return &feedingPageElements;
+        case SUNBATHE_PAGE:
+            return &sunbathingPageElements;
         case PET_POMMY_PAGE:
             return &petPommyPageElements;
         case STORE_PAGE:
@@ -95,6 +96,12 @@ void moveCursor(int8_t direction) {
     // If in water logging mode, handle water level adjustment
     if (currentPage == DRINK_WATER_PAGE && isWaterLogging) {
         handleWaterLogging(direction);
+        return;
+    }
+    
+    // If in sunbathing mode, handle sunlight level adjustment
+    if (currentPage == SUNBATHE_PAGE && isSunbathing) {
+        handleSunbathing(direction);
         return;
     }
     
@@ -129,15 +136,16 @@ void handleCursorSelection() {
                     // Toggle water logging mode
                     toggleWaterLogging();
                 } else if (cursorPosition == 2) {
-                    changePage(FEEDING_PAGE);
+                    changePage(SUNBATHE_PAGE);
                 }
                 break;
                 
-            case FEEDING_PAGE:
+            case SUNBATHE_PAGE:
                 if (cursorPosition == 0) {
                     changePage(DRINK_WATER_PAGE);
                 } else if (cursorPosition == 1) {
-                    // TODO: Implement feeding action
+                    // Toggle sunbathing mode
+                    toggleSunbathing();
                 } else if (cursorPosition == 2) {
                     changePage(PET_POMMY_PAGE);
                 }
@@ -145,7 +153,7 @@ void handleCursorSelection() {
 
             case PET_POMMY_PAGE:
                 if (cursorPosition == 0) {
-                    changePage(FEEDING_PAGE);
+                    changePage(SUNBATHE_PAGE);
                 } else if (cursorPosition == 1) {
                     // TODO: Implement pet pommy action
                 } else if (cursorPosition == 2) {

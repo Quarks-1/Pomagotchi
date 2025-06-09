@@ -54,7 +54,8 @@ uint8_t getWaterFillLevel() {
 // Function to check if logged message should be shown
 bool shouldShowLoggedMessage() {
     if (showLoggedMessage) {
-        if (millis() - loggedMessageStartTime >= LOGGED_MESSAGE_DURATION) {
+        unsigned long currentTime = millis();
+        if (currentTime - loggedMessageStartTime >= LOGGED_MESSAGE_DURATION) {
             showLoggedMessage = false;
             return false;
         }
@@ -66,4 +67,5 @@ bool shouldShowLoggedMessage() {
 // Function to reset logged message state
 void resetLoggedMessage() {
     showLoggedMessage = false;
+    loggedMessageStartTime = 0;
 } 

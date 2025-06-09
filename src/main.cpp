@@ -8,6 +8,8 @@
 #include "main.h"
 #include "encoder.h"
 #include "persistent_storage.h"
+#include "light_sensor.h"
+#include "sunbathing.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     16  // RST -> GPIO16
@@ -27,6 +29,7 @@ Page currentPage = HOME_PAGE;
 Page previousPage = HOME_PAGE;  // Track previous page for detecting changes
 bool isDebugMode = true;  // Global debug mode flag
 bool isEncoderEnabled = false;  // Global flag to enable/disable encoder functionality
+bool isLightSensorEnabled = false; // Global flag to enable/disable light sensor functionality
 
 // Create encoder instance
 Encoder encoder;
@@ -39,67 +42,47 @@ void changePage(Page newPage);
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
-    Serial.println("Pomagotchi Starting up...");
-
-    // Initialize persistent storage
-    initializeStorage();
+    Serial.println("Starting Pomagotchi...");
     
-    // Initialize pet state (loads saved values)
+    // Initialize storage
+    if (!initializeStorage()) {
+        Serial.println("Failed to initialize storage");
+    }
+    
+    // Initialize light sensor
+    if (!initializeLightSensor()) {
+        Serial.println("Light sensor not found - continuing without it");
+    }
+    
+    // Initialize pet state
     initializePetState();
-
-    // Initialize SPI
-    SPI.begin();
     
     // Initialize display
-    initializeDisplay();
-    
-    // Initialize encoder
-    encoder.begin();
-    
-    // Initialize cursor
-    initializeCursor();
-    
-    // Set initial page to home
-    currentPage = HOME_PAGE;
-    previousPage = HOME_PAGE;
-    Serial.println("Starting at Home Page");
+    display.init(115200);
+    display.setRotation(1);
+    display.clearScreen();
+    display.fillScreen(GxEPD_WHITE);
     
     // Draw initial page
+    currentPage = HOME_PAGE;
     drawHomePage(display);
-    Serial.println("Home Page drawn successfully");
 }
 
 void loop() {
+    // Update pet state
+    updatePetState();
+    
+    // Update sunlight level based on sensor
+    updateSunlightLevel();
+    
+    // Handle serial input
     handleInput();
     
-    // Only process encoder if enabled
-    if (encoder.isEnabled()) {
-        // Update encoder state - no delay for responsiveness
-        encoder.update();
-        
-        // Handle encoder rotation
-        int8_t delta = encoder.getDelta();
-        if (delta != 0) {
-            moveCursor(delta);
-        }
-        
-        // Handle encoder button
-        if (encoder.getButtonPressed()) {
-            handleCursorSelection();
-            encoder.resetButtonState();
-        }
-    }
+    // Update display
+    updateDisplay();
     
-    static unsigned long lastScreenUpdate = 0;
-    unsigned long currentMillis = millis();
-    
-    // Only update screen every 100ms
-    if (currentMillis - lastScreenUpdate >= 100) {
-        updatePetState();  // Update pet's hunger and thirst
-        updateDisplay();
-        lastScreenUpdate = currentMillis;
-    }
+    // Small delay to prevent overwhelming the system
+    delay(100);
 }
 
 void initializeDisplay() {
@@ -112,8 +95,10 @@ void initializeDisplay() {
 
 void changePage(Page newPage) {
     if (newPage != currentPage) {
-        // Reset logged message state when changing pages
-        resetLoggedMessage();
+        // Reset logged message state only when changing to/from water page
+        if (currentPage == DRINK_WATER_PAGE || newPage == DRINK_WATER_PAGE) {
+            resetLoggedMessage();
+        }
         
         // Set cursor position based on the navigation flow
         switch (currentPage) {
@@ -123,11 +108,11 @@ void changePage(Page newPage) {
             case DRINK_WATER_PAGE:
                 cursorPosition = (newPage == HOME_PAGE) ? 1 : 0;
                 break;
-            case FEEDING_PAGE:
+            case SUNBATHE_PAGE:
                 cursorPosition = (newPage == DRINK_WATER_PAGE) ? 2 : 0;
                 break;
             case PET_POMMY_PAGE:
-                cursorPosition = (newPage == FEEDING_PAGE) ? 2 : 0;
+                cursorPosition = (newPage == SUNBATHE_PAGE) ? 2 : 0;
                 break;
             case STORE_PAGE:
                 cursorPosition = (newPage == PET_POMMY_PAGE) ? 2 : 0;
@@ -149,8 +134,8 @@ void changePage(Page newPage) {
             case DRINK_WATER_PAGE:
                 drawDrinkWaterPage(display);
                 break;
-            case FEEDING_PAGE:
-                drawFeedingPage(display);
+            case SUNBATHE_PAGE:
+                drawSunbathingPage(display);
                 break;
             case PET_POMMY_PAGE:
                 drawPetPommyPage(display);
@@ -198,9 +183,9 @@ void handleInput() {
             changePage(DRINK_WATER_PAGE);
             Serial.println("Changed to water page");
         }
-        else if (command == "feed") {
-            changePage(FEEDING_PAGE);
-            Serial.println("Changed to feeding page");
+        else if (command == "sun") {
+            changePage(SUNBATHE_PAGE);
+            Serial.println("Changed to sunbathing page");
         }
         else if (command == "pet") {
             changePage(PET_POMMY_PAGE);
@@ -238,8 +223,8 @@ void handleInput() {
                 case DRINK_WATER_PAGE:
                     Serial.println("Water");
                     break;
-                case FEEDING_PAGE:
-                    Serial.println("Feeding");
+                case SUNBATHE_PAGE:
+                    Serial.println("Sunbathing");
                     break;
                 case STORE_PAGE:
                     Serial.println("Store");
@@ -253,12 +238,27 @@ void handleInput() {
             Serial.println("enter - Select current item");
             Serial.println("home - Go to home page");
             Serial.println("water - Go to water page");
-            Serial.println("feed - Go to feeding page");
+            Serial.println("sun - Go to sunbathing page");
+            Serial.println("pet - Go to pet pommy page");
             Serial.println("store - Go to store page");
             Serial.println("set_thirst <0-100> - Set thirst level");
             Serial.println("set_sunlight <0-100> - Set sunlight level");
             Serial.println("status - Show current status");
             Serial.println("help - Show this help message");
+            Serial.println("add - Increase sunlight level (only works in sunbathing mode)");
+        }
+        else if (command == "add") {
+            if (currentPage == SUNBATHE_PAGE && isSunbathing) {
+                if (sunlightFillLevel < 100) {
+                    sunlightFillLevel++;
+                    Serial.print("Manually increased sunlight fill level to: ");
+                    Serial.println(sunlightFillLevel);
+                } else {
+                    Serial.println("Sunlight fill level already at maximum (100)");
+                }
+            } else {
+                Serial.println("Can only add sunlight while in sunbathing mode");
+            }
         }
         else {
             Serial.println("Unknown command. Type 'help' for available commands.");
@@ -275,8 +275,8 @@ void updateDisplay() {
         case DRINK_WATER_PAGE:
             drawDrinkWaterPage(display);
             break;
-        case FEEDING_PAGE:
-            drawFeedingPage(display);
+        case SUNBATHE_PAGE:
+            drawSunbathingPage(display);
             break;
         case PET_POMMY_PAGE:
             drawPetPommyPage(display);
