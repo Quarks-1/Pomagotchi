@@ -1,5 +1,6 @@
 #include "pet_state.h"
 #include "depletion.h"
+#include "persistent_storage.h"
 #include <Arduino.h>
 
 // Initialize pet state variables
@@ -7,8 +8,28 @@ uint8_t sunlight = 100;  // Changed from hunger
 uint8_t thirst = 100;
 unsigned long lastUpdateTime = 0;
 
+void initializePetState() {
+    // Load saved values from storage
+    sunlight = loadSunlight();
+    thirst = loadThirst();
+    
+    // If values are 0 (uninitialized storage), set defaults
+    if (sunlight == 0) sunlight = 100;
+    if (thirst == 0) thirst = 100;
+}
+
 void updatePetState() {
     updateDepletion(sunlight, thirst, lastUpdateTime);
+    
+    // Save values periodically (every 5 seconds)
+    static unsigned long lastSaveTime = 0;
+    if (millis() - lastSaveTime >= 5000) {
+        if (saveSunlight(sunlight) && saveThirst(thirst)) {
+            lastSaveTime = millis();
+        } else {
+            Serial.println("Failed to save pet state");
+        }
+    }
 }
 
 uint8_t getBatteryLevel() {
@@ -32,6 +53,11 @@ void logWater(uint8_t amount) {
         thirst = 0;
     } else {
         thirst = newThirst;
+    }
+    
+    // Save the new thirst value immediately
+    if (!saveThirst(thirst)) {
+        Serial.println("Failed to save thirst value");
     }
     
     Serial.print("New thirst value: ");

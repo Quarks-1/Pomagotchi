@@ -9,6 +9,7 @@ extern unsigned long lastUpdateTime;
 
 // Function declarations
 void updatePetState();
+void initializePetState();
 
 // Get the current battery level (0-100)
 uint8_t getBatteryLevel();

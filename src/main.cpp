@@ -6,6 +6,8 @@
 #include "cursor.h"
 #include "water_logging.h"
 #include "main.h"
+#include "encoder.h"
+#include "persistent_storage.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     16  // RST -> GPIO16
@@ -15,11 +17,6 @@
 // MOSI -> GPIO23 (default SPI)
 // SCK -> GPIO18 (default SPI)
 
-// Pin definitions for rotary encoder
-#define ENCODER_A_PIN   12  // CLK -> GPIO12
-#define ENCODER_B_PIN   13  // DT -> GPIO13
-#define ENCODER_BTN_PIN 14  // SW -> GPIO14
-
 // Display dimensions
 #define EPD_WIDTH       200
 #define EPD_HEIGHT      200
@@ -28,49 +25,28 @@
 GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(GxEPD2_154_D67(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN));
 Page currentPage = HOME_PAGE;
 Page previousPage = HOME_PAGE;  // Track previous page for detecting changes
-bool isDebugMode = false;  // Global debug mode flag
+bool isDebugMode = true;  // Global debug mode flag
+bool isEncoderEnabled = false;  // Global flag to enable/disable encoder functionality
 
-// Rotary encoder state
-volatile int8_t encoderDelta = 0;
-volatile bool encoderButtonPressed = false;
-volatile unsigned long lastButtonPress = 0;
-const unsigned long DEBOUNCE_DELAY = 50;  // 50ms debounce time
+// Create encoder instance
+Encoder encoder;
 
 // Function declarations
 void initializeDisplay();
 void handleInput();
 void updateDisplay();
 void changePage(Page newPage);
-void handleEncoder();
-void handleEncoderButton();
-
-// Interrupt service routines for rotary encoder
-void IRAM_ATTR encoderISR() {
-    static uint8_t oldState = 0;
-    uint8_t newState = (digitalRead(ENCODER_A_PIN) << 1) | digitalRead(ENCODER_B_PIN);
-    uint8_t state = (oldState << 2) | newState;
-    
-    if (state == 0b1101 || state == 0b0100 || state == 0b0010 || state == 0b1011) {
-        encoderDelta++;
-    } else if (state == 0b1110 || state == 0b0111 || state == 0b0001 || state == 0b1000) {
-        encoderDelta--;
-    }
-    
-    oldState = newState;
-}
-
-void IRAM_ATTR buttonISR() {
-    unsigned long currentTime = millis();
-    if (currentTime - lastButtonPress > DEBOUNCE_DELAY) {
-        encoderButtonPressed = true;
-        lastButtonPress = currentTime;
-    }
-}
 
 void setup() {
     Serial.begin(115200);
     delay(1000);
     Serial.println("Pomagotchi Starting up...");
+
+    // Initialize persistent storage
+    initializeStorage();
+    
+    // Initialize pet state (loads saved values)
+    initializePetState();
 
     // Initialize SPI
     SPI.begin();
@@ -78,15 +54,8 @@ void setup() {
     // Initialize display
     initializeDisplay();
     
-    // Initialize rotary encoder pins
-    pinMode(ENCODER_A_PIN, INPUT_PULLUP);
-    pinMode(ENCODER_B_PIN, INPUT_PULLUP);
-    pinMode(ENCODER_BTN_PIN, INPUT_PULLUP);
-    
-    // Attach interrupts for rotary encoder
-    attachInterrupt(digitalPinToInterrupt(ENCODER_A_PIN), encoderISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(ENCODER_B_PIN), encoderISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(ENCODER_BTN_PIN), buttonISR, FALLING);
+    // Initialize encoder
+    encoder.begin();
     
     // Initialize cursor
     initializeCursor();
@@ -103,24 +72,33 @@ void setup() {
 
 void loop() {
     handleInput();
-    handleEncoder();
-    handleEncoderButton();
-    updatePetState();  // Update pet's hunger and thirst
-    updateDisplay();
-    delay(100); // Small delay to prevent too frequent updates
-}
-
-void handleEncoder() {
-    if (encoderDelta != 0) {
-        moveCursor(encoderDelta);
-        encoderDelta = 0;
+    
+    // Only process encoder if enabled
+    if (encoder.isEnabled()) {
+        // Update encoder state - no delay for responsiveness
+        encoder.update();
+        
+        // Handle encoder rotation
+        int8_t delta = encoder.getDelta();
+        if (delta != 0) {
+            moveCursor(delta);
+        }
+        
+        // Handle encoder button
+        if (encoder.getButtonPressed()) {
+            handleCursorSelection();
+            encoder.resetButtonState();
+        }
     }
-}
-
-void handleEncoderButton() {
-    if (encoderButtonPressed) {
-        handleCursorSelection();
-        encoderButtonPressed = false;
+    
+    static unsigned long lastScreenUpdate = 0;
+    unsigned long currentMillis = millis();
+    
+    // Only update screen every 100ms
+    if (currentMillis - lastScreenUpdate >= 100) {
+        updatePetState();  // Update pet's hunger and thirst
+        updateDisplay();
+        lastScreenUpdate = currentMillis;
     }
 }
 
