@@ -2,13 +2,13 @@
 #include "depletion.h"
 #include "persistent_storage.h"
 #include "sunbathing.h"
+#include "tasks.h"
 #include <Arduino.h>
 
 // Initialize pet state variables
 uint8_t sunlight = 100;  // Changed from hunger
 uint8_t thirst = 100;
 unsigned long lastUpdateTime = 0;
-static unsigned long lastSunlightUpdate = 0;
 constexpr unsigned long NORMAL_SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
 constexpr unsigned long DEBUG_SUNLIGHT_UPDATE_INTERVAL = 100;   // Update every second in debug mode
 
@@ -20,35 +20,14 @@ void initializePetState() {
     // If values are 0 (uninitialized storage), set defaults
     if (sunlight == 0) sunlight = 100;
     if (thirst == 0) thirst = 100;
+    
+    // Initialize timer
+    lastUpdateTime = millis();
 }
 
 void updatePetState() {
-    static uint8_t lastSavedSunlight = 0;
-    static uint8_t lastSavedThirst = 0;
-    
-    updateDepletion(sunlight, thirst, lastUpdateTime);
-    
-    // Update sunlight level based on sensor readings
-    unsigned long currentTime = millis();
-    unsigned long updateInterval = isDebugMode ? DEBUG_SUNLIGHT_UPDATE_INTERVAL : NORMAL_SUNLIGHT_UPDATE_INTERVAL;
-    if (currentTime - lastSunlightUpdate >= updateInterval) {
-        updateSunlightLevel();
-        lastSunlightUpdate = currentTime;
-    }
-    
-    // Save values only when they change or every 30 seconds
-    static unsigned long lastSaveTime = 0;
-    if ((millis() - lastSaveTime >= 30000) || 
-        (lastSavedSunlight != sunlight) || 
-        (lastSavedThirst != thirst)) {
-        if (saveSunlight(sunlight) && saveThirst(thirst)) {
-            lastSaveTime = millis();
-            lastSavedSunlight = sunlight;
-            lastSavedThirst = thirst;
-        } else {
-            Serial.println("Failed to save pet state");
-        }
-    }
+    // This function is now handled by the logic task
+    // It's kept for backward compatibility but is empty
 }
 
 uint8_t getBatteryLevel() {
@@ -64,19 +43,22 @@ void logWater(uint8_t amount) {
     Serial.print(", Adding amount: ");
     Serial.println(amount);
     
-    // Calculate new thirst value with bounds checking
-    int16_t newThirst = thirst + amount;
-    if (newThirst > 100) {
-        thirst = 100;
-    } else if (newThirst < 0) {
-        thirst = 0;
-    } else {
-        thirst = newThirst;
-    }
-    
-    // Save the new thirst value immediately
-    if (!saveThirst(thirst)) {
-        Serial.println("Failed to save thirst value");
+    if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
+        // Calculate new thirst value with bounds checking
+        int16_t newThirst = thirst + amount;
+        if (newThirst > 100) {
+            thirst = 100;
+        } else if (newThirst < 0) {
+            thirst = 0;
+        } else {
+            thirst = newThirst;
+        }
+        
+        // Send storage event
+        StorageEvent event = {StorageEvent::SAVE_THIRST, thirst};
+        xQueueSend(storageQueue, &event, 0);
+        
+        xSemaphoreGive(petStateMutex);
     }
     
     Serial.print("New thirst value: ");

@@ -9,7 +9,6 @@
 // Global variables for sunbathing state
 bool isSunbathing = false;
 uint8_t sunlightFillLevel = 0;
-static unsigned long lastSunlightUpdate = 0;
 constexpr unsigned long SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
 
 // Function to handle sunbathing
@@ -61,7 +60,6 @@ void toggleSunbathing() {
         Serial.println(sunlight);
     } else {
         Serial.println("Entering sunbathing mode");
-        lastSunlightUpdate = millis();
     }
 }
 

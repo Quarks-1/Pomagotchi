@@ -1,10 +1,16 @@
-#ifndef MAIN_H
-#define MAIN_H
+#pragma once
 
-// Global debug mode flag
+#include <Arduino.h>
+#include "encoder.h"
+#include "screens.h"
+
+// Global variables
+extern Encoder encoder;
+extern bool isLightSensorEnabled;
 extern bool isDebugMode;
 
-// Function to check if debug mode is active
-bool isDebugModeActive();
-
-#endif // MAIN_H 
+// Function declarations
+void handleSerialInput(char c);
+void updateDisplay();
+void changePage(Page newPage);
+bool isDebugModeActive(); 

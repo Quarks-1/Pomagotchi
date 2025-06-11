@@ -11,9 +11,7 @@
 #include "persistent_storage.h"
 #include "light_sensor.h"
 #include "sunbathing.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/queue.h>
+#include "tasks.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     13  // RST -> GPIO13
@@ -38,209 +36,12 @@ bool isLightSensorEnabled = true; // Global flag to enable/disable light sensor 
 // Create encoder instance
 Encoder encoder;
 
-// FreeRTOS task handles
-TaskHandle_t inputTaskHandle = NULL;
-TaskHandle_t displayTaskHandle = NULL;
-
-// Queue for input events
-QueueHandle_t inputQueue = NULL;
-
-// Input event structure
-struct InputEvent {
-    enum Type {
-        ENCODER_DELTA,
-        ENCODER_BUTTON,
-        SERIAL_INPUT
-    } type;
-    int16_t value;  // Changed from int8_t to int16_t to accommodate Serial.read()
-};
-
 // Function declarations
 void initializeDisplay();
 void handleInput();
 void updateDisplay();
 void changePage(Page newPage);
-
-// Input handling task
-void inputTask(void *parameter) {
-    static unsigned long lastSensorRead = 0;
-    const unsigned long SENSOR_READ_INTERVAL = 1000; // Read sensor every second
-    
-    while (1) {
-        // Update encoder state
-        encoder.update();
-        
-        // Handle encoder rotation
-        int8_t delta = encoder.getDelta();
-        if (delta != 0) {
-            InputEvent event = {InputEvent::ENCODER_DELTA, static_cast<int16_t>(delta)};
-            xQueueSend(inputQueue, &event, 0);
-        }
-        
-        // Handle encoder button
-        if (encoder.getButtonPressed()) {
-            InputEvent event = {InputEvent::ENCODER_BUTTON, 0};
-            xQueueSend(inputQueue, &event, 0);
-            encoder.resetButtonState();
-        }
-        
-        // Handle serial input
-        if (Serial.available()) {
-            InputEvent event = {InputEvent::SERIAL_INPUT, Serial.read()};
-            xQueueSend(inputQueue, &event, 0);
-        }
-        
-        // Read and print light sensor value periodically
-        unsigned long currentTime = millis();
-        if (currentTime - lastSensorRead >= SENSOR_READ_INTERVAL) {
-            if (isLightSensorEnabled) {
-                uint16_t lightLevel = getLightLevel();
-                Serial.print("Light sensor reading: ");
-                Serial.print(lightLevel);
-                Serial.println(" (raw value)");
-                Serial.print("In sunlight: ");
-                Serial.println(isInSunlight() ? "Yes" : "No");
-            } else {
-                Serial.println("Light sensor is disabled");
-            }
-            lastSensorRead = currentTime;
-        }
-        
-        // Small delay to prevent task from hogging CPU
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
-// Display update task
-void displayTask(void *parameter) {
-    const TickType_t xDelay = pdMS_TO_TICKS(100); // 100ms display update interval
-    String commandBuffer = "";
-    
-    while (1) {
-        // Process any pending input events
-        InputEvent event;
-        while (xQueueReceive(inputQueue, &event, 0) == pdTRUE) {
-            switch (event.type) {
-                case InputEvent::ENCODER_DELTA:
-                    moveCursor(event.value > 0 ? 1 : -1);
-                    break;
-                case InputEvent::ENCODER_BUTTON:
-                    handleCursorSelection();
-                    break;
-                case InputEvent::SERIAL_INPUT:
-                    // Handle serial input
-                    char c = event.value;
-                    if (c == '\n' || c == '\r') {
-                        if (commandBuffer.length() > 0) {
-                            // Process the command
-                            if (commandBuffer == "debug") {
-                                isDebugMode = !isDebugMode;
-                                Serial.print("Debug mode: ");
-                                Serial.println(isDebugMode ? "ON" : "OFF");
-                            }
-                            else if (commandBuffer == "left") {
-                                moveCursor(-1);
-                                Serial.println("Moved cursor left");
-                            }
-                            else if (commandBuffer == "right") {
-                                moveCursor(1);
-                                Serial.println("Moved cursor right");
-                            }
-                            else if (commandBuffer == "enter") {
-                                handleCursorSelection();
-                                Serial.println("Selected current item");
-                            }
-                            else if (commandBuffer == "home") {
-                                changePage(HOME_PAGE);
-                                Serial.println("Changed to home page");
-                            }
-                            else if (commandBuffer == "water") {
-                                changePage(DRINK_WATER_PAGE);
-                                Serial.println("Changed to water page");
-                            }
-                            else if (commandBuffer == "sun") {
-                                changePage(SUNBATHE_PAGE);
-                                Serial.println("Changed to sunbathing page");
-                            }
-                            else if (commandBuffer == "pet") {
-                                changePage(PET_POMMY_PAGE);
-                                Serial.println("Changed to pet pommy page");
-                            }
-                            else if (commandBuffer == "store") {
-                                changePage(STORE_PAGE);
-                                Serial.println("Changed to store page");
-                            }
-                            else if (commandBuffer.startsWith("set_thirst ")) {
-                                // Extract number after "set_thirst "
-                                int value = commandBuffer.substring(11).toInt();
-                                thirst = constrain(value, 0, 100);
-                                Serial.print("Set thirst to: ");
-                                Serial.println(thirst);
-                            }
-                            else if (commandBuffer.startsWith("set_sunlight ")) {
-                                // Extract number after "set_sunlight "
-                                int value = commandBuffer.substring(13).toInt();
-                                sunlight = constrain(value, 0, 100);
-                                Serial.print("Set sunlight to: ");
-                                Serial.println(sunlight);
-                            }
-                            else if (commandBuffer == "status") {
-                                Serial.println("Current Status:");
-                                Serial.print("Thirst: ");
-                                Serial.println(thirst);
-                                Serial.print("Sunlight: ");
-                                Serial.println(sunlight);
-                                Serial.print("Current Page: ");
-                                switch (currentPage) {
-                                    case HOME_PAGE:
-                                        Serial.println("Home");
-                                        break;
-                                    case DRINK_WATER_PAGE:
-                                        Serial.println("Water");
-                                        break;
-                                    case SUNBATHE_PAGE:
-                                        Serial.println("Sunbathing");
-                                        break;
-                                    case STORE_PAGE:
-                                        Serial.println("Store");
-                                        break;
-                                }
-                            }
-                            else if (commandBuffer == "help") {
-                                Serial.println("Available commands:");
-                                Serial.println("left - Move cursor left");
-                                Serial.println("right - Move cursor right");
-                                Serial.println("enter - Select current item");
-                                Serial.println("home - Go to home page");
-                                Serial.println("water - Go to water page");
-                                Serial.println("sun - Go to sunbathing page");
-                                Serial.println("pet - Go to pet pommy page");
-                                Serial.println("store - Go to store page");
-                                Serial.println("set_thirst <0-100> - Set thirst level");
-                                Serial.println("set_sunlight <0-100> - Set sunlight level");
-                                Serial.println("status - Show current status");
-                                Serial.println("help - Show this help message");
-                                Serial.println("add - Increase sunlight level (only works in sunbathing mode)");
-                            }
-                            commandBuffer = "";
-                        }
-                    } else {
-                        commandBuffer += c;
-                    }
-                    break;
-            }
-        }
-        
-        // Update pet state
-        updatePetState();
-        
-        // Update display
-        updateDisplay();
-        
-        // Wait for next update interval
-        vTaskDelay(xDelay);
-    }
-}
+void handleSerialInput(char c);
 
 void setup() {
     Serial.begin(115200);
@@ -253,8 +54,11 @@ void setup() {
     encoder.begin();
     
     // Initialize storage
+    Serial.println("Initializing storage...");
     if (!initializeStorage()) {
         Serial.println("Failed to initialize storage");
+    } else {
+        Serial.println("Storage initialized successfully");
     }
     
     // Initialize light sensor
@@ -263,7 +67,10 @@ void setup() {
     }
     
     // Initialize pet state
+    Serial.println("Initializing pet state...");
     initializePetState();
+    Serial.print("Initial sunlight value: ");
+    Serial.println(sunlight);
     
     // Initialize display
     display.init(115200);
@@ -271,27 +78,8 @@ void setup() {
     display.clearScreen();
     display.fillScreen(GxEPD_WHITE);
     
-    // Create input queue
-    inputQueue = xQueueCreate(10, sizeof(InputEvent));
-    
-    // Create tasks
-    xTaskCreate(
-        inputTask,      // Task function
-        "InputTask",    // Task name
-        4096,          // Stack size
-        NULL,          // Task parameters
-        2,             // Task priority
-        &inputTaskHandle
-    );
-    
-    xTaskCreate(
-        displayTask,    // Task function
-        "DisplayTask",  // Task name
-        4096,          // Stack size
-        NULL,          // Task parameters
-        1,             // Task priority
-        &displayTaskHandle
-    );
+    // Create and start tasks
+    createTasks();
     
     // Draw initial page
     currentPage = HOME_PAGE;
@@ -370,72 +158,82 @@ void changePage(Page newPage) {
     }
 }
 
-void handleInput() {
-    if (Serial.available() > 0) {
-        String command = Serial.readStringUntil('\n');
-        command.trim();  // Remove whitespace
-        
-        // Print received command for debugging
-        Serial.print("Received command: ");
-        Serial.println(command);
-        
-        if (command == "debug") {
+void handleSerialInput(char c) {
+    static String commandBuffer = "";
+    
+    if (c == '\n' || c == '\r') {
+        if (commandBuffer.length() > 0) {
+            // Process the command
+            if (commandBuffer == "debug") {
             isDebugMode = !isDebugMode;
             Serial.print("Debug mode: ");
             Serial.println(isDebugMode ? "ON" : "OFF");
         }
-        else if (command == "left") {
+            else if (commandBuffer == "left") {
             moveCursor(-1);
             Serial.println("Moved cursor left");
         }
-        else if (command == "right") {
+            else if (commandBuffer == "right") {
             moveCursor(1);
             Serial.println("Moved cursor right");
         }
-        else if (command == "enter") {
+            else if (commandBuffer == "enter") {
             handleCursorSelection();
             Serial.println("Selected current item");
         }
-        else if (command == "home") {
+            else if (commandBuffer == "home") {
             changePage(HOME_PAGE);
             Serial.println("Changed to home page");
         }
-        else if (command == "water") {
+            else if (commandBuffer == "water") {
             changePage(DRINK_WATER_PAGE);
             Serial.println("Changed to water page");
         }
-        else if (command == "sun") {
+            else if (commandBuffer == "sun") {
             changePage(SUNBATHE_PAGE);
             Serial.println("Changed to sunbathing page");
         }
-        else if (command == "pet") {
+            else if (commandBuffer == "pet") {
             changePage(PET_POMMY_PAGE);
             Serial.println("Changed to pet pommy page");
         }
-        else if (command == "store") {
+            else if (commandBuffer == "store") {
             changePage(STORE_PAGE);
             Serial.println("Changed to store page");
         }
-        else if (command.startsWith("set_thirst ")) {
+            else if (commandBuffer.startsWith("set_thirst ")) {
             // Extract number after "set_thirst "
-            int value = command.substring(11).toInt();
+                int value = commandBuffer.substring(11).toInt();
+                if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
             thirst = constrain(value, 0, 100);
+                    StorageEvent event = {StorageEvent::SAVE_THIRST, thirst};
+                    xQueueSend(storageQueue, &event, 0);
+                    xSemaphoreGive(petStateMutex);
+                }
             Serial.print("Set thirst to: ");
             Serial.println(thirst);
         }
-        else if (command.startsWith("set_sunlight ")) {
+            else if (commandBuffer.startsWith("set_sunlight ")) {
             // Extract number after "set_sunlight "
-            int value = command.substring(13).toInt();
+                int value = commandBuffer.substring(13).toInt();
+                if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
             sunlight = constrain(value, 0, 100);
+                    StorageEvent event = {StorageEvent::SAVE_SUNLIGHT, sunlight};
+                    xQueueSend(storageQueue, &event, 0);
+                    xSemaphoreGive(petStateMutex);
+                }
             Serial.print("Set sunlight to: ");
             Serial.println(sunlight);
         }
-        else if (command == "status") {
+            else if (commandBuffer == "status") {
             Serial.println("Current Status:");
+                if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
             Serial.print("Thirst: ");
             Serial.println(thirst);
             Serial.print("Sunlight: ");
             Serial.println(sunlight);
+                    xSemaphoreGive(petStateMutex);
+                }
             Serial.print("Current Page: ");
             switch (currentPage) {
                 case HOME_PAGE:
@@ -452,7 +250,7 @@ void handleInput() {
                     break;
             }
         }
-        else if (command == "help") {
+            else if (commandBuffer == "help") {
             Serial.println("Available commands:");
             Serial.println("left - Move cursor left");
             Serial.println("right - Move cursor right");
@@ -468,22 +266,10 @@ void handleInput() {
             Serial.println("help - Show this help message");
             Serial.println("add - Increase sunlight level (only works in sunbathing mode)");
         }
-        else if (command == "add") {
-            if (currentPage == SUNBATHE_PAGE && isSunbathing) {
-                if (sunlightFillLevel < 100) {
-                    sunlightFillLevel++;
-                    Serial.print("Manually increased sunlight fill level to: ");
-                    Serial.println(sunlightFillLevel);
-                } else {
-                    Serial.println("Sunlight fill level already at maximum (100)");
+            commandBuffer = "";
                 }
             } else {
-                Serial.println("Can only add sunlight while in sunbathing mode");
-            }
-        }
-        else {
-            Serial.println("Unknown command. Type 'help' for available commands.");
-        }
+        commandBuffer += c;
     }
 }
 
