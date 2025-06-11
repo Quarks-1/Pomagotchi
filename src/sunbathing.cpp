@@ -4,6 +4,7 @@
 #include "main.h"
 #include "persistent_storage.h"
 #include "light_sensor.h"
+#include "logged_message.h"
 
 // Global variables for sunbathing state
 bool isSunbathing = false;
@@ -19,7 +20,7 @@ void handleSunbathing(int8_t direction) {
         int16_t newLevel = sunlightFillLevel + direction * multiplier;
         if (newLevel >= 0 && newLevel <= 100) {
             sunlightFillLevel = newLevel;
-            Serial.print("Sunlight fill level updated: ");
+            Serial.print("Sunlight fill level updated by encoder: ");
             Serial.println(sunlightFillLevel);
         }
     }
@@ -31,16 +32,31 @@ void toggleSunbathing() {
     if (!isSunbathing) {
         Serial.print("Exiting sunbathing mode. Final fill level: ");
         Serial.println(sunlightFillLevel);
-        // Store the fill level before resetting
-        uint8_t finalFillLevel = sunlightFillLevel;
+        
+        // Add the fill level to current sunlight level
+        int16_t newSunlight = sunlight + sunlightFillLevel;
+        if (newSunlight > 100) {
+            sunlight = 100;
+        } else if (newSunlight < 0) {
+            sunlight = 0;
+        } else {
+            sunlight = newSunlight;
+        }
+        
         // Reset sunlight fill level when exiting logging mode
         sunlightFillLevel = 0;
         // Reset cursor position to the up arrow (index 1)
         cursorPosition = 1;
-        // Update global sunlight variable
-        sunlight = finalFillLevel;
-        // Log the sunlight with the stored fill level
-        saveSunlight(finalFillLevel);
+        
+        // Save the new sunlight value
+        if (!saveSunlight(sunlight)) {
+            Serial.println("Failed to save sunlight value");
+        }
+        
+        // Show logged message using shared function
+        resetLoggedMessage();  // Reset first to ensure clean state
+        showLoggedMessageNow();
+        
         Serial.print("Updated global sunlight to: ");
         Serial.println(sunlight);
     } else {
@@ -57,17 +73,13 @@ uint8_t getSunlightFillLevel() {
 // Function to update sunlight level based on sensor readings
 void updateSunlightLevel() {
     if (isSunbathing) {
-        unsigned long currentTime = millis();
-        if (currentTime - lastSunlightUpdate >= SUNLIGHT_UPDATE_INTERVAL) {
-            if (isInSunlight()) {
-                // Increment sunlight level by 1% every minute when in sunlight
-                if (sunlightFillLevel < 100) {
-                    sunlightFillLevel++;
-                    Serial.print("Sunlight level increased to: ");
-                    Serial.println(sunlightFillLevel);
-                }
+        if (isInSunlight()) {
+            // Increment sunlight level by 1% every minute when in sunlight
+            if (sunlightFillLevel < 100) {
+                sunlightFillLevel++;
+                Serial.print("Sunlight level increased to: ");
+                Serial.println(sunlightFillLevel);
             }
-            lastSunlightUpdate = currentTime;
         }
     }
 } 

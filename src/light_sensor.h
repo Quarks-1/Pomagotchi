@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_VCNL4040.h>
+#include <Adafruit_VCNL4020.h>
 
 // Light sensor thresholds
 constexpr uint16_t MIN_SUNLIGHT_THRESHOLD = 1000;  // Minimum light level to consider as sunlight

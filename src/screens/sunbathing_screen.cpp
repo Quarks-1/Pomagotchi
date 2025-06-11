@@ -1,3 +1,4 @@
+#include "../logged_message.h"
 #include "../screens.h"
 #include "../sprites.h"
 #include "../pet_state.h"
@@ -6,19 +7,52 @@
 #include "../ui_config.h"
 #include "../cursor.h"
 #include "../sunbathing.h"
+#include "../water_logging.h"
 
 void drawSunbathingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
     static AnimationState petAnimation = {AnimationType::SIT, 0, 0, true};
+    static uint8_t lastFillLevel = 0;
+    static bool lastLoggedMessage = false;
+    static uint8_t lastCursorPosition = 0;
+    static bool lastSunbathing = false;
     
     if (firstDraw) {
         display.clearScreen();
         display.fillScreen(GxEPD_WHITE);
         firstDraw = false;
+        // Force an update on first draw
+        lastFillLevel = getSunlightFillLevel() + 1;  // Force different from current
+        lastLoggedMessage = !shouldShowLoggedMessage();  // Force different from current
+        lastCursorPosition = cursorPosition + 1;  // Force different from current
+        lastSunbathing = !isSunbathing;  // Force different from current
     }
 
     // Update animation state
     updateAnimation(petAnimation);
+    
+    // Check if we need to update the display
+    bool needsUpdate = firstDraw || 
+                      lastFillLevel != getSunlightFillLevel() ||
+                      lastLoggedMessage != shouldShowLoggedMessage() ||
+                      lastCursorPosition != cursorPosition ||
+                      lastSunbathing != isSunbathing;
+    
+    if (!needsUpdate) {
+        // Draw star clusters and animation frame even if nothing else needs updating
+        drawStarCluster(display, 0, 0, 32, 32);
+        drawStarCluster(display, 168, 0, 32, 32);
+        const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
+        drawAnimationFrame(display, 0, 75, currentFrame);
+        display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
+        return;
+    }
+    
+    // Update our tracking variables
+    lastFillLevel = getSunlightFillLevel();
+    lastLoggedMessage = shouldShowLoggedMessage();
+    lastCursorPosition = cursorPosition;
+    lastSunbathing = isSunbathing;
     
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
@@ -44,6 +78,14 @@ void drawSunbathingPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& displ
     
     // Draw status bar moved to the right
     drawStatusBar(display, 140, 70, 50, 80, getSunlightFillLevel(), UIConfig::CORNER_RADIUS);
+
+    // Draw logged message if needed
+    if (shouldShowLoggedMessage()) {
+        display.setTextColor(GxEPD_BLACK);
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(25, 55);
+        display.println("Logged!");
+    }
 
     // Change screen buttons with cursor selection
     drawChangeScreenButton(display, 10, 170, 85, 30, "left", !isSunbathing && cursorPosition == 0, 3, 3, UIConfig::CORNER_RADIUS);

@@ -1,12 +1,16 @@
 #include "pet_state.h"
 #include "depletion.h"
 #include "persistent_storage.h"
+#include "sunbathing.h"
 #include <Arduino.h>
 
 // Initialize pet state variables
 uint8_t sunlight = 100;  // Changed from hunger
 uint8_t thirst = 100;
 unsigned long lastUpdateTime = 0;
+static unsigned long lastSunlightUpdate = 0;
+constexpr unsigned long NORMAL_SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
+constexpr unsigned long DEBUG_SUNLIGHT_UPDATE_INTERVAL = 100;   // Update every second in debug mode
 
 void initializePetState() {
     // Load saved values from storage
@@ -19,13 +23,28 @@ void initializePetState() {
 }
 
 void updatePetState() {
+    static uint8_t lastSavedSunlight = 0;
+    static uint8_t lastSavedThirst = 0;
+    
     updateDepletion(sunlight, thirst, lastUpdateTime);
     
-    // Save values periodically (every 5 seconds)
+    // Update sunlight level based on sensor readings
+    unsigned long currentTime = millis();
+    unsigned long updateInterval = isDebugMode ? DEBUG_SUNLIGHT_UPDATE_INTERVAL : NORMAL_SUNLIGHT_UPDATE_INTERVAL;
+    if (currentTime - lastSunlightUpdate >= updateInterval) {
+        updateSunlightLevel();
+        lastSunlightUpdate = currentTime;
+    }
+    
+    // Save values only when they change or every 30 seconds
     static unsigned long lastSaveTime = 0;
-    if (millis() - lastSaveTime >= 5000) {
+    if ((millis() - lastSaveTime >= 30000) || 
+        (lastSavedSunlight != sunlight) || 
+        (lastSavedThirst != thirst)) {
         if (saveSunlight(sunlight) && saveThirst(thirst)) {
             lastSaveTime = millis();
+            lastSavedSunlight = sunlight;
+            lastSavedThirst = thirst;
         } else {
             Serial.println("Failed to save pet state");
         }

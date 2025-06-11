@@ -30,11 +30,13 @@ void Encoder::update() {
     int32_t delta = new_position - last_position;
     last_position = new_position;
     
-    // Read button state
+    // Read button state with debouncing
     bool current_button = !ss.digitalRead(ENCODER_BUTTON);
     if (current_button != last_button_state) {
+        // Simple debounce - only trigger on rising edge (button press)
         if (current_button) {
             button_pressed = true;
+            Serial.println("Button pressed!");
         }
         last_button_state = current_button;
     }
@@ -43,6 +45,13 @@ void Encoder::update() {
 int8_t Encoder::getDelta() {
     int32_t delta = last_position - encoder_position;
     encoder_position = last_position;
+    if (delta != 0) {
+        Serial.print("Encoder turned: ");
+        Serial.print(delta > 0 ? "clockwise" : "counter-clockwise");
+        Serial.print(" (delta: ");
+        Serial.print(delta);
+        Serial.println(")");
+    }
     return delta;
 }
 

@@ -1,3 +1,4 @@
+#include "../logged_message.h"
 #include "../screens.h"
 #include "../sprites.h"
 #include "../pet_state.h"
@@ -10,15 +11,47 @@
 void drawDrinkWaterPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
     static AnimationState petAnimation = {AnimationType::SNIFF_AND_WALK, 0, 0, true};
+    static uint8_t lastWaterLevel = 0;
+    static bool lastLoggedMessage = false;
+    static uint8_t lastCursorPosition = 0;
+    static bool lastWaterLogging = false;
     
     if (firstDraw) {
         display.clearScreen();
         display.fillScreen(GxEPD_WHITE);
         firstDraw = false;
+        // Force an update on first draw
+        lastWaterLevel = getWaterFillLevel() + 1;  // Force different from current
+        lastLoggedMessage = !shouldShowLoggedMessage();  // Force different from current
+        lastCursorPosition = cursorPosition + 1;  // Force different from current
+        lastWaterLogging = !isWaterLogging;  // Force different from current
     }
 
     // Update animation state
     updateAnimation(petAnimation);
+    
+    // Check if we need to update the display
+    bool needsUpdate = firstDraw || 
+                      lastWaterLevel != getWaterFillLevel() ||
+                      lastLoggedMessage != shouldShowLoggedMessage() ||
+                      lastCursorPosition != cursorPosition ||
+                      lastWaterLogging != isWaterLogging;
+    
+    if (!needsUpdate) {
+        // Draw star clusters and animation frame even if nothing else needs updating
+        drawStarCluster(display, 0, 0, 32, 32);
+        drawStarCluster(display, 168, 0, 32, 32);
+        const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
+        drawAnimationFrame(display, 0, 75, currentFrame);
+        display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
+        return;
+    }
+    
+    // Update our tracking variables
+    lastWaterLevel = getWaterFillLevel();
+    lastLoggedMessage = shouldShowLoggedMessage();
+    lastCursorPosition = cursorPosition;
+    lastWaterLogging = isWaterLogging;
     
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);

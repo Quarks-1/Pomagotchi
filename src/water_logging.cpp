@@ -2,13 +2,11 @@
 #include "screens.h"
 #include "cursor.h"
 #include "main.h"
+#include "logged_message.h"
 
 // Global variables for water logging state
 bool isWaterLogging = false;
 static uint8_t waterFillLevel = 0;
-static bool showLoggedMessage = false;
-static unsigned long loggedMessageStartTime = 0;
-const unsigned long LOGGED_MESSAGE_DURATION = 2000; // 2 seconds
 
 // Function to handle water logging
 void handleWaterLogging(int8_t direction) {
@@ -37,35 +35,17 @@ void toggleWaterLogging() {
         // Reset cursor position to the up arrow (index 1)
         cursorPosition = 1;
         // Show logged message
-        showLoggedMessage = true;
-        loggedMessageStartTime = millis();
+        showLoggedMessageNow();
         // Log the water with the stored fill level
         logWater(finalFillLevel);
     } else {
         Serial.println("Entering water logging mode");
+        // Reset logged message state when entering water logging mode
+        resetLoggedMessage();
     }
 }
 
 // Function to get current water fill level
 uint8_t getWaterFillLevel() {
     return waterFillLevel;
-}
-
-// Function to check if logged message should be shown
-bool shouldShowLoggedMessage() {
-    if (showLoggedMessage) {
-        unsigned long currentTime = millis();
-        if (currentTime - loggedMessageStartTime >= LOGGED_MESSAGE_DURATION) {
-            showLoggedMessage = false;
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-// Function to reset logged message state
-void resetLoggedMessage() {
-    showLoggedMessage = false;
-    loggedMessageStartTime = 0;
 } 
