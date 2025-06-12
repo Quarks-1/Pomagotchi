@@ -11,18 +11,21 @@
 #define DISPLAY_TASK_PRIORITY 2
 #define STORAGE_TASK_PRIORITY 1
 #define LOGIC_TASK_PRIORITY 2
+#define SLEEP_TASK_PRIORITY 1
 
-// Task stack sizes
-#define INPUT_TASK_STACK_SIZE 4096
-#define DISPLAY_TASK_STACK_SIZE 4096
-#define STORAGE_TASK_STACK_SIZE 4096
-#define LOGIC_TASK_STACK_SIZE 2048
+// Task stack sizes (increased to prevent stack overflow)
+#define INPUT_TASK_STACK_SIZE 6144
+#define DISPLAY_TASK_STACK_SIZE 8192
+#define STORAGE_TASK_STACK_SIZE 6144
+#define LOGIC_TASK_STACK_SIZE 4096
+#define SLEEP_TASK_STACK_SIZE 4096
 
 // Task handles
 extern TaskHandle_t inputTaskHandle;
 extern TaskHandle_t displayTaskHandle;
 extern TaskHandle_t storageTaskHandle;
 extern TaskHandle_t logicTaskHandle;
+extern TaskHandle_t sleepTaskHandle;
 
 // Queues
 extern QueueHandle_t inputQueue;
@@ -79,4 +82,5 @@ void createTasks();
 void inputTask(void* parameter);
 void displayTask(void* parameter);
 void storageTask(void* parameter);
-void logicTask(void* parameter); 
+void logicTask(void* parameter);
+void sleepTask(void* parameter); 

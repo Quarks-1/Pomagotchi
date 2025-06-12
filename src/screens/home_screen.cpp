@@ -5,6 +5,7 @@
 #include "../ui_components.h"
 #include "../ui_config.h"
 #include "../cursor.h"
+#include "../sleep_message.h"
 
 // Removed unused global animation state
 // static AnimationState petAnimation;
@@ -42,6 +43,14 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     // Battery
     drawIcon(display, 170, 40, 20, 20, IconType::LIGHTNING);
     drawStatusBar(display, 170, 70, 20, 80, getBatteryLevel(), UIConfig::CORNER_RADIUS);
+
+    // Draw sleeping message if needed
+    if (shouldShowSleepMessage()) {
+        display.setTextColor(GxEPD_BLACK);
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(25, 55);
+        display.println("Sleeping!");
+    }
 
     // Change screen buttons with cursor selection
     drawChangeScreenButton(display, 10, 170, 90, 30, "left", cursorPosition == 0, 3, 3, UIConfig::CORNER_RADIUS);

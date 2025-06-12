@@ -9,6 +9,7 @@
 #include "sunbathing.h"
 #include "depletion.h"
 #include "light_sensor.h"
+#include "sleep_manager.h"
 
 // External declarations
 extern Encoder encoder;
@@ -22,6 +23,7 @@ TaskHandle_t inputTaskHandle = NULL;
 TaskHandle_t displayTaskHandle = NULL;
 TaskHandle_t storageTaskHandle = NULL;
 TaskHandle_t logicTaskHandle = NULL;
+TaskHandle_t sleepTaskHandle = NULL;
 
 // Queues
 QueueHandle_t inputQueue = NULL;
@@ -84,6 +86,15 @@ void createTasks() {
         LOGIC_TASK_PRIORITY,
         &logicTaskHandle
     );
+    
+    xTaskCreate(
+        sleepTask,
+        "SleepTask",
+        SLEEP_TASK_STACK_SIZE,
+        NULL,
+        SLEEP_TASK_PRIORITY,
+        &sleepTaskHandle
+    );
 }
 
 void inputTask(void* parameter) {
@@ -99,6 +110,7 @@ void inputTask(void* parameter) {
         if (delta != 0) {
             InputEvent event = {InputEvent::ENCODER_DELTA, static_cast<int16_t>(delta)};
             xQueueSend(inputQueue, &event, 0);
+            sleepManager.updateActivity(); // Update activity for sleep manager
         }
         
         // Handle encoder button
@@ -106,6 +118,7 @@ void inputTask(void* parameter) {
             InputEvent event = {InputEvent::ENCODER_BUTTON, 0};
             xQueueSend(inputQueue, &event, 0);
             encoder.resetButtonState();
+            sleepManager.updateActivity(); // Update activity for sleep manager
         }
         
         // Handle serial input
@@ -114,6 +127,7 @@ void inputTask(void* parameter) {
             if (readValue != -1) {  // Check if read was successful
                 InputEvent event = {InputEvent::SERIAL_INPUT, static_cast<int16_t>(readValue)};
                 xQueueSend(inputQueue, &event, 0);
+                sleepManager.updateActivity(); // Update activity for sleep manager
             }
         }
         
@@ -241,6 +255,17 @@ void logicTask(void* parameter) {
             
             xSemaphoreGive(petStateMutex);
         }
+        
+        vTaskDelay(xDelay);
+    }
+}
+
+void sleepTask(void* parameter) {
+    const TickType_t xDelay = pdMS_TO_TICKS(SLEEP_CHECK_INTERVAL_MS); // Check every second
+    
+    while (1) {
+        // Check if we should enter sleep mode
+        checkSleepConditions();
         
         vTaskDelay(xDelay);
     }

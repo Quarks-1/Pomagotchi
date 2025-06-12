@@ -12,6 +12,8 @@
 #include "light_sensor.h"
 #include "sunbathing.h"
 #include "tasks.h"
+#include "sleep_manager.h"
+#include "sleep_message.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     13  // RST -> GPIO13
@@ -72,6 +74,10 @@ void setup() {
     Serial.print("Initial sunlight value: ");
     Serial.println(sunlight);
     
+    // Initialize sleep manager
+    Serial.println("Initializing sleep manager...");
+    initializeSleepManager();
+    
     // Initialize display
     display.init(115200);
     display.setRotation(1);
@@ -107,6 +113,11 @@ void changePage(Page newPage) {
         }
         if (currentPage == SUNBATHE_PAGE || newPage == SUNBATHE_PAGE) {
             resetLoggedMessage();
+        }
+        
+        // Reset sleep message when changing away from home page
+        if (currentPage == HOME_PAGE || newPage == HOME_PAGE) {
+            resetSleepMessage();
         }
         
         // Set cursor position based on the navigation flow
@@ -250,6 +261,47 @@ void handleSerialInput(char c) {
                     break;
             }
         }
+            else if (commandBuffer == "sleep_enable") {
+            sleepManager.setSleepEnabled(true);
+            Serial.println("Sleep mode enabled");
+        }
+            else if (commandBuffer == "sleep_disable") {
+            sleepManager.setSleepEnabled(false);
+            Serial.println("Sleep mode disabled");
+        }
+            else if (commandBuffer == "sleep_status") {
+            Serial.print("Sleep enabled: ");
+            Serial.println(sleepManager.isInLightSleep() ? "NO (currently in sleep)" : "YES");
+            Serial.print("Time since last activity: ");
+            Serial.print(sleepManager.getTimeSinceLastActivity() / 1000);
+            Serial.println(" seconds");
+            Serial.print("Sleep timeout: ");
+            Serial.print(INACTIVITY_TIMEOUT_MS / 1000);
+            Serial.println(" seconds");
+        }
+            else if (commandBuffer == "sleep_now") {
+            Serial.println("Forcing light sleep...");
+            sleepManager.enterLightSleep();
+        }
+            else if (commandBuffer == "sleep_test") {
+            Serial.println("Testing sleep message display and entering sleep...");
+            sleepManager.enterLightSleep();
+        }
+            else if (commandBuffer == "stack_info") {
+            Serial.println("Task Stack Information:");
+            Serial.print("Input task free stack: ");
+            Serial.println(uxTaskGetStackHighWaterMark(inputTaskHandle));
+            Serial.print("Display task free stack: ");
+            Serial.println(uxTaskGetStackHighWaterMark(displayTaskHandle));
+            Serial.print("Storage task free stack: ");
+            Serial.println(uxTaskGetStackHighWaterMark(storageTaskHandle));
+            Serial.print("Logic task free stack: ");
+            Serial.println(uxTaskGetStackHighWaterMark(logicTaskHandle));
+            Serial.print("Sleep task free stack: ");
+            Serial.println(uxTaskGetStackHighWaterMark(sleepTaskHandle));
+            Serial.print("Free heap: ");
+            Serial.println(esp_get_free_heap_size());
+        }
             else if (commandBuffer == "help") {
             Serial.println("Available commands:");
             Serial.println("left - Move cursor left");
@@ -265,6 +317,12 @@ void handleSerialInput(char c) {
             Serial.println("status - Show current status");
             Serial.println("help - Show this help message");
             Serial.println("add - Increase sunlight level (only works in sunbathing mode)");
+            Serial.println("sleep_enable - Enable sleep mode");
+            Serial.println("sleep_disable - Disable sleep mode");
+            Serial.println("sleep_status - Show sleep status");
+            Serial.println("sleep_now - Force enter light sleep");
+            Serial.println("sleep_test - Test sleep mode with message display");
+            Serial.println("stack_info - Show task stack usage and memory info");
         }
             commandBuffer = "";
                 }
