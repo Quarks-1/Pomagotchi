@@ -1,20 +1,20 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <GxEPD2_BW.h>
-#include "logged_message.h"
-#include "screens.h"
-#include "pet_state.h"
-#include "cursor.h"
-#include "water_logging.h"
+#include "ui/logged_message.h"
+#include "ui/screens/screens.h"
+#include "pet/pet_state.h"
+#include "ui/cursor.h"
+#include "activities/water_logging.h"
 #include "main.h"
-#include "encoder.h"
-#include "persistent_storage.h"
-#include "light_sensor.h"
-#include "sunbathing.h"
-#include "pet_pommy.h"
+#include "hardware/encoder.h"
+#include "storage/persistent_storage.h"
+#include "hardware/light_sensor.h"
+#include "activities/sunbathing.h"
+#include "pet/pet_pommy.h"
 #include "tasks.h"
-#include "sleep_manager.h"
-#include "sleep_message.h"
+#include "system/sleep_manager.h"
+#include "system/sleep_message.h"
 
 // Pin definitions for E-Ink display
 #define EPD_RST_PIN     13  // RST -> GPIO13

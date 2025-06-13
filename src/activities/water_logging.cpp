@@ -1,8 +1,8 @@
-#include "pet_state.h"
-#include "screens.h"
-#include "cursor.h"
-#include "main.h"
-#include "logged_message.h"
+#include "pet/pet_state.h"
+#include "ui/screens/screens.h"
+#include "ui/cursor.h"
+#include "core/main.h"
+#include "ui/logged_message.h"
 
 // Global variables for water logging state
 bool isWaterLogging = false;

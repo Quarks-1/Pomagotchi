@@ -1,10 +1,10 @@
-#include "pet_state.h"
-#include "screens.h"
-#include "cursor.h"
-#include "main.h"
-#include "persistent_storage.h"
-#include "light_sensor.h"
-#include "logged_message.h"
+#include "pet/pet_state.h"
+#include "ui/screens/screens.h"
+#include "ui/cursor.h"
+#include "core/main.h"
+#include "storage/persistent_storage.h"
+#include "hardware/light_sensor.h"
+#include "ui/logged_message.h"
 
 // Global variables for sunbathing state
 bool isSunbathing = false;

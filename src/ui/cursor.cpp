@@ -1,11 +1,11 @@
 #include "cursor.h"
-#include "screens.h"
+#include "screens/screens.h"
 #include "ui_components.h"
 #include "navigation.h"
-#include "pet_state.h"
-#include "water_logging.h"
-#include "sunbathing.h"
-#include "pet_pommy.h"
+#include "../pet/pet_state.h"
+#include "../activities/water_logging.h"
+#include "../activities/sunbathing.h"
+#include "../pet/pet_pommy.h"
 
 // Global cursor position
 uint8_t cursorPosition = 0;

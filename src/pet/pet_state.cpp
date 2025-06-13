@@ -1,8 +1,8 @@
 #include "pet_state.h"
 #include "depletion.h"
-#include "persistent_storage.h"
-#include "sunbathing.h"
-#include "tasks.h"
+#include "storage/persistent_storage.h"
+#include "activities/sunbathing.h"
+#include "core/tasks.h"
 #include <Arduino.h>
 
 // Initialize pet state variables

@@ -1,10 +1,10 @@
 #include "sleep_manager.h"
-#include "pet_state.h"
-#include "persistent_storage.h"
-#include "tasks.h"
+#include "pet/pet_state.h"
+#include "storage/persistent_storage.h"
+#include "core/tasks.h"
 #include "sleep_message.h"
-#include "screens.h"
-#include "depletion.h"
+#include "ui/screens/screens.h"
+#include "pet/depletion.h"
 #include <esp_sleep.h>
 #include <GxEPD2_BW.h>
 

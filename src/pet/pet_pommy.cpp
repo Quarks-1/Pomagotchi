@@ -1,9 +1,9 @@
 #include "pet_state.h"
-#include "screens.h"
-#include "cursor.h"
-#include "main.h"
-#include "logged_message.h"
-#include "light_sensor.h"
+#include "ui/screens/screens.h"
+#include "ui/cursor.h"
+#include "core/main.h"
+#include "ui/logged_message.h"
+#include "hardware/light_sensor.h"
 
 // Global variables for pet pommy state
 bool isPetting = false;

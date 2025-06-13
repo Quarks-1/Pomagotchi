@@ -1,12 +1,16 @@
-#include "../screens.h"
-#include "../sprites.h"
-#include "../pet_state.h"
-#include "../animation.h"
+#include "ui/screens/screens.h"
+#include "assets/sprites.h"
+#include "pet/pet_state.h"
+#include "animation/animation.h"
+#include "ui/ui_components.h"
+#include "ui/ui_config.h"
+#include "ui/cursor.h"
+#include "system/sleep_message.h"
 #include "../ui_components.h"
 #include "../ui_config.h"
 #include "../cursor.h"
-#include "../sleep_message.h"
-#include "../sleep_manager.h"
+#include "system/sleep_message.h"
+#include "system/sleep_manager.h"
 
 // Removed unused global animation state
 // static AnimationState petAnimation;

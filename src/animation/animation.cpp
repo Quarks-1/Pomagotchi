@@ -1,5 +1,5 @@
 #include "animation.h"
-#include "sprites.h"
+#include "assets/sprites.h"
 
 namespace {
     // Idle animation frames (both idle1 and idle2)

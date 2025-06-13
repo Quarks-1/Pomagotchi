@@ -1,12 +1,12 @@
-#include "../logged_message.h"
-#include "../screens.h"
-#include "../sprites.h"
-#include "../pet_state.h"
-#include "../animation.h"
-#include "../ui_components.h"
-#include "../ui_config.h"
-#include "../cursor.h"
-#include "../pet_pommy.h"
+#include "ui/logged_message.h"
+#include "ui/screens/screens.h"
+#include "assets/sprites.h"
+#include "pet/pet_state.h"
+#include "animation/animation.h"
+#include "ui/ui_components.h"
+#include "ui/ui_config.h"
+#include "ui/cursor.h"
+#include "pet/pet_pommy.h"
 
 void drawPetPommyPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
