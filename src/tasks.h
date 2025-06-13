@@ -35,6 +35,7 @@ extern QueueHandle_t logicQueue;
 
 // Mutex for protecting shared data
 extern SemaphoreHandle_t petStateMutex;
+extern SemaphoreHandle_t displayMutex;
 
 // Input event structure
 struct InputEvent {
@@ -62,6 +63,7 @@ struct StorageEvent {
     enum Type {
         SAVE_SUNLIGHT,
         SAVE_THIRST,
+        SAVE_PET_STATUS,
         SAVE_ALL
     } type;
     uint8_t value;

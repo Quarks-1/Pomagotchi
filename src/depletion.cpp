@@ -1,6 +1,6 @@
 #include "depletion.h"
 
-void updateDepletion(uint8_t& sunlight, uint8_t& thirst, unsigned long& lastUpdateTime) {
+void updateDepletion(uint8_t& sunlight, uint8_t& thirst, uint8_t& petStatus, unsigned long& lastUpdateTime) {
     unsigned long currentTime = millis();
     unsigned long elapsedTime = currentTime - lastUpdateTime;
     
@@ -18,6 +18,17 @@ void updateDepletion(uint8_t& sunlight, uint8_t& thirst, unsigned long& lastUpda
             thirst -= thirstIntervals;
         } else {
             thirst = 0;
+        }
+    }
+    
+    // Update petStatus level (1 every 2 hours)
+    // Check if we've passed multiple 2-hour intervals
+    unsigned long petStatusIntervals = elapsedTime / PET_STATUS_DEPLETION_INTERVAL;
+    if (petStatusIntervals > 0) {
+        if (petStatus > petStatusIntervals) {
+            petStatus -= petStatusIntervals;
+        } else {
+            petStatus = 0;
         }
     }
 } 

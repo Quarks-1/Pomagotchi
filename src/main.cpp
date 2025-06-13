@@ -11,6 +11,7 @@
 #include "persistent_storage.h"
 #include "light_sensor.h"
 #include "sunbathing.h"
+#include "pet_pommy.h"
 #include "tasks.h"
 #include "sleep_manager.h"
 #include "sleep_message.h"
@@ -84,12 +85,11 @@ void setup() {
     display.clearScreen();
     display.fillScreen(GxEPD_WHITE);
     
+    // Set initial page (displayTask will handle the drawing)
+    currentPage = HOME_PAGE;
+    
     // Create and start tasks
     createTasks();
-    
-    // Draw initial page
-    currentPage = HOME_PAGE;
-    drawHomePage(display);
 }
 
 void loop() {
@@ -107,11 +107,14 @@ void initializeDisplay() {
 
 void changePage(Page newPage) {
     if (newPage != currentPage) {
-        // Reset logged message state when changing to/from water or sunbathing pages
+        // Reset logged message state when changing to/from activity pages
         if (currentPage == DRINK_WATER_PAGE || newPage == DRINK_WATER_PAGE) {
             resetLoggedMessage();
         }
         if (currentPage == SUNBATHE_PAGE || newPage == SUNBATHE_PAGE) {
+            resetLoggedMessage();
+        }
+        if (currentPage == PET_POMMY_PAGE || newPage == PET_POMMY_PAGE) {
             resetLoggedMessage();
         }
         
@@ -142,30 +145,34 @@ void changePage(Page newPage) {
         previousPage = currentPage;
         currentPage = newPage;
         
-        // Full refresh when changing pages
-        display.clearScreen();
-        display.fillScreen(GxEPD_WHITE);
-        
-        // Draw the new page
-        switch (currentPage) {
-            case HOME_PAGE:
-                drawHomePage(display);
-                break;
-            case DRINK_WATER_PAGE:
-                drawDrinkWaterPage(display);
-                break;
-            case SUNBATHE_PAGE:
-                drawSunbathingPage(display);
-                break;
-            case PET_POMMY_PAGE:
-                drawPetPommyPage(display);
-                break;
-            case STORE_PAGE:
-                drawStorePage(display);
-                break;
+        // Protect display operations with mutex
+        if (xSemaphoreTake(displayMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+            // Full refresh when changing pages
+            display.clearScreen();
+            display.fillScreen(GxEPD_WHITE);
+            
+            // Draw the new page
+            switch (currentPage) {
+                case HOME_PAGE:
+                    drawHomePage(display);
+                    break;
+                case DRINK_WATER_PAGE:
+                    drawDrinkWaterPage(display);
+                    break;
+                case SUNBATHE_PAGE:
+                    drawSunbathingPage(display);
+                    break;
+                case PET_POMMY_PAGE:
+                    drawPetPommyPage(display);
+                    break;
+                case STORE_PAGE:
+                    drawStorePage(display);
+                    break;
+            }
+            
+            display.display();
+            xSemaphoreGive(displayMutex);
         }
-        
-        display.display();
     }
 }
 
@@ -236,6 +243,29 @@ void handleSerialInput(char c) {
             Serial.print("Set sunlight to: ");
             Serial.println(sunlight);
         }
+            else if (commandBuffer.startsWith("set_pets ")) {
+            // Extract number after "set_pets "
+                int value = commandBuffer.substring(9).toInt();
+                if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
+            petStatus = constrain(value, 0, 10);
+                    StorageEvent event = {StorageEvent::SAVE_PET_STATUS, petStatus};
+                    xQueueSend(storageQueue, &event, 0);
+                    xSemaphoreGive(petStateMutex);
+                }
+            Serial.print("Set pet status to: ");
+            Serial.println(petStatus);
+        }
+            else if (commandBuffer.startsWith("set_proximity ")) {
+            // Extract number after "set_proximity "
+                int value = commandBuffer.substring(14).toInt();
+                setProximityThreshold(value);
+        }
+            else if (commandBuffer == "proximity") {
+            Serial.print("Current proximity value: ");
+            Serial.println(getProximityLevel());
+            Serial.print("Current proximity threshold: ");
+            Serial.println(getProximityThreshold());
+        }
             else if (commandBuffer == "status") {
             Serial.println("Current Status:");
                 if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
@@ -243,6 +273,8 @@ void handleSerialInput(char c) {
             Serial.println(thirst);
             Serial.print("Sunlight: ");
             Serial.println(sunlight);
+            Serial.print("Pet Status: ");
+            Serial.println(petStatus);
                     xSemaphoreGive(petStateMutex);
                 }
             Serial.print("Current Page: ");
@@ -255,6 +287,9 @@ void handleSerialInput(char c) {
                     break;
                 case SUNBATHE_PAGE:
                     Serial.println("Sunbathing");
+                    break;
+                case PET_POMMY_PAGE:
+                    Serial.println("Pet Pommy");
                     break;
                 case STORE_PAGE:
                     Serial.println("Store");
@@ -314,6 +349,9 @@ void handleSerialInput(char c) {
             Serial.println("store - Go to store page");
             Serial.println("set_thirst <0-100> - Set thirst level");
             Serial.println("set_sunlight <0-100> - Set sunlight level");
+            Serial.println("set_pets <0-10> - Set pet status level");
+            Serial.println("set_proximity <value> - Set proximity threshold");
+            Serial.println("proximity - Show current proximity value & threshold");
             Serial.println("status - Show current status");
             Serial.println("help - Show this help message");
             Serial.println("add - Increase sunlight level (only works in sunbathing mode)");

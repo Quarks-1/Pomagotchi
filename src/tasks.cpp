@@ -7,6 +7,7 @@
 #include "cursor.h"
 #include "water_logging.h"
 #include "sunbathing.h"
+#include "pet_pommy.h"
 #include "depletion.h"
 #include "light_sensor.h"
 #include "sleep_manager.h"
@@ -16,7 +17,7 @@ extern Encoder encoder;
 extern bool isLightSensorEnabled;
 extern void handleSerialInput(char c);
 extern void updateDisplay();
-extern bool saveValues(uint8_t sunlight, uint8_t thirst);
+extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus);
 
 // Task handles
 TaskHandle_t inputTaskHandle = NULL;
@@ -33,10 +34,12 @@ QueueHandle_t logicQueue = NULL;
 
 // Mutex for protecting shared data
 SemaphoreHandle_t petStateMutex = NULL;
+SemaphoreHandle_t displayMutex = NULL;
 
 // Storage task variables
 static uint8_t lastSavedSunlight = 0;
 static uint8_t lastSavedThirst = 0;
+static uint8_t lastSavedPetStatus = 0;
 static unsigned long lastSaveTime = 0;
 const unsigned long SAVE_INTERVAL = 30000; // Save every 30 seconds
 
@@ -49,6 +52,7 @@ void createTasks() {
     
     // Create mutex
     petStateMutex = xSemaphoreCreateMutex();
+    displayMutex = xSemaphoreCreateMutex();
     
     // Create tasks
     xTaskCreate(
@@ -171,7 +175,10 @@ void displayTask(void* parameter) {
         }
         
         // Update display
-        updateDisplay();
+        if (xSemaphoreTake(displayMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            updateDisplay();
+            xSemaphoreGive(displayMutex);
+        }
         
         vTaskDelay(xDelay);
     }
@@ -183,6 +190,7 @@ void storageTask(void* parameter) {
     bool shouldSave = false;
     uint8_t currentSunlight = 0;
     uint8_t currentThirst = 0;
+    uint8_t currentPetStatus = 0;
     
     while (1) {
         shouldSave = false;
@@ -194,16 +202,25 @@ void storageTask(void* parameter) {
                     case StorageEvent::SAVE_SUNLIGHT:
                         currentSunlight = event.value;
                         currentThirst = thirst;
+                        currentPetStatus = petStatus;
                         shouldSave = true;
                         break;
                     case StorageEvent::SAVE_THIRST:
                         currentSunlight = sunlight;
                         currentThirst = event.value;
+                        currentPetStatus = petStatus;
+                        shouldSave = true;
+                        break;
+                    case StorageEvent::SAVE_PET_STATUS:
+                        currentSunlight = sunlight;
+                        currentThirst = thirst;
+                        currentPetStatus = event.value;
                         shouldSave = true;
                         break;
                     case StorageEvent::SAVE_ALL:
                         currentSunlight = sunlight;
                         currentThirst = thirst;
+                        currentPetStatus = petStatus;
                         shouldSave = true;
                         break;
                 }
@@ -215,9 +232,10 @@ void storageTask(void* parameter) {
         unsigned long currentTime = millis();
         if (!shouldSave && (currentTime - lastSaveTime >= SAVE_INTERVAL)) {
             if (xSemaphoreTake(petStateMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-                if (lastSavedSunlight != sunlight || lastSavedThirst != thirst) {
+                if (lastSavedSunlight != sunlight || lastSavedThirst != thirst || lastSavedPetStatus != petStatus) {
                     currentSunlight = sunlight;
                     currentThirst = thirst;
+                    currentPetStatus = petStatus;
                     shouldSave = true;
                 }
                 xSemaphoreGive(petStateMutex);
@@ -226,9 +244,10 @@ void storageTask(void* parameter) {
         
         // Perform save if needed
         if (shouldSave) {
-            if (saveValues(currentSunlight, currentThirst)) {
+            if (saveValues(currentSunlight, currentThirst, currentPetStatus)) {
                 lastSavedSunlight = currentSunlight;
                 lastSavedThirst = currentThirst;
+                lastSavedPetStatus = currentPetStatus;
                 lastSaveTime = currentTime;
                 Serial.println("Pet state saved successfully");
             } else {
@@ -241,16 +260,28 @@ void storageTask(void* parameter) {
 }
 
 void logicTask(void* parameter) {
-    const TickType_t xDelay = pdMS_TO_TICKS(1000); // Update every second
+    const TickType_t xDelay = pdMS_TO_TICKS(200); // Update every 200ms for better petting detection
+    static unsigned long lastDepletionUpdate = 0;
+    const unsigned long DEPLETION_UPDATE_INTERVAL = 1000; // Update depletion every second
     
     while (1) {
         if (xSemaphoreTake(petStateMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-            // Update depletion
-            updateDepletion(sunlight, thirst, lastUpdateTime);
+            unsigned long currentTime = millis();
+            
+            // Update depletion only every second (not every 200ms)
+            if (currentTime - lastDepletionUpdate >= DEPLETION_UPDATE_INTERVAL) {
+                updateDepletion(sunlight, thirst, petStatus, lastUpdateTime);
+                lastDepletionUpdate = currentTime;
+            }
             
             // Update sunlight level based on sensor readings
             if (isSunbathing) {
                 updateSunlightLevel();
+            }
+            
+            // Update petting detection based on proximity sensor (runs every 200ms)
+            if (isPetting) {
+                updatePettingDetection();
             }
             
             xSemaphoreGive(petStateMutex);

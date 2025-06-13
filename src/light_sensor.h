@@ -15,4 +15,5 @@ extern bool isLightSensorEnabled;
 bool initializeLightSensor();
 uint16_t getLightLevel();
 bool isInSunlight();
+uint16_t readProximityValue();
 void setLightSensorEnabled(bool enabled); 

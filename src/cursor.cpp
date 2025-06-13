@@ -5,6 +5,7 @@
 #include "pet_state.h"
 #include "water_logging.h"
 #include "sunbathing.h"
+#include "pet_pommy.h"
 
 // Global cursor position
 uint8_t cursorPosition = 0;
@@ -105,6 +106,12 @@ void moveCursor(int8_t direction) {
         return;
     }
     
+    // If in petting mode, handle pet level adjustment
+    if (currentPage == PET_POMMY_PAGE && isPetting) {
+        handlePetting(direction);
+        return;
+    }
+    
     // Calculate new position without wrapping
     int16_t newPosition = cursorPosition + direction;
     if (newPosition >= 0 && newPosition < currentElements->count) {
@@ -155,7 +162,8 @@ void handleCursorSelection() {
                 if (cursorPosition == 0) {
                     changePage(SUNBATHE_PAGE);
                 } else if (cursorPosition == 1) {
-                    // TODO: Implement pet pommy action
+                    // Toggle petting mode
+                    togglePetting();
                 } else if (cursorPosition == 2) {
                     changePage(STORE_PAGE);
                 }

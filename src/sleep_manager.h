@@ -8,12 +8,19 @@
 #define WAKE_PIN GPIO_NUM_39                   // GPIO39 for encoder INT pin
 #define SLEEP_CHECK_INTERVAL_MS 1000           // Check sleep conditions every second
 
+// Forward declarations
+void forceFullRefresh();
+
 // Sleep manager class
 class SleepManager {
 private:
     unsigned long lastActivityTime;
+    unsigned long sleepStartTime;  // Track when sleep mode begins
     bool sleepEnabled;
     bool inLightSleep;
+    
+    // Make handleWakeFromSleep a private member function
+    void handleWakeFromSleep();
     
 public:
     SleepManager();
@@ -41,6 +48,12 @@ public:
     
     // Update activity time directly (used internally to avoid recursion)
     void setLastActivityTime(unsigned long time);
+    
+    // Get the time spent in sleep mode (in milliseconds)
+    unsigned long getSleepDuration();
+    
+    // Get the sleep start time
+    unsigned long getSleepStartTime() const { return sleepStartTime; }
 };
 
 // Global sleep manager instance
@@ -50,5 +63,4 @@ extern SleepManager sleepManager;
 void initializeSleepManager();
 void checkSleepConditions();
 void prepareForSleep();
-void handleWakeFromSleep();
-void forceFullRefresh(); 
+void handleWakeFromSleep(); 

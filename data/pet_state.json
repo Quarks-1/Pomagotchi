@@ -1,4 +1,5 @@
 {
     "sunlight": 100,
-    "thirst": 100
+    "thirst": 100,
+    "petStatus": 10
 } 

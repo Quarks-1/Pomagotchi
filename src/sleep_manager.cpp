@@ -4,6 +4,7 @@
 #include "tasks.h"
 #include "sleep_message.h"
 #include "screens.h"
+#include "depletion.h"
 #include <esp_sleep.h>
 #include <GxEPD2_BW.h>
 
@@ -18,6 +19,7 @@ extern GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display;
 
 SleepManager::SleepManager() :
     lastActivityTime(0),
+    sleepStartTime(0),
     sleepEnabled(true),
     inLightSleep(false)
 {
@@ -71,11 +73,24 @@ void SleepManager::enterLightSleep() {
     
     Serial.println("Entering light sleep mode...");
     
+    // Record sleep start time
+    sleepStartTime = millis();
+    
     // Prepare for sleep - save pet state
     prepareForSleep();
     
     // Set flag before sleeping
     inLightSleep = true;
+    
+    // Force show sleep message again to ensure it stays visible
+    showSleepMessageNow();
+    
+    // Update display one final time to ensure sleep sprite is shown
+    if (xSemaphoreTake(displayMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        drawHomePage(display);
+        display.display();
+        xSemaphoreGive(displayMutex);
+    }
     
     // Enter light sleep
     Serial.println("ESP32 entering light sleep now...");
@@ -118,30 +133,34 @@ void forceFullRefresh() {
     // Reset sleep message
     resetSleepMessage();
     
-    // Full refresh - same as changePage function
-    display.clearScreen();
-    display.fillScreen(GxEPD_WHITE);
-    
-    // Draw the current page
-    switch (currentPage) {
-        case HOME_PAGE:
-            drawHomePage(display);
-            break;
-        case DRINK_WATER_PAGE:
-            drawDrinkWaterPage(display);
-            break;
-        case SUNBATHE_PAGE:
-            drawSunbathingPage(display);
-            break;
-        case PET_POMMY_PAGE:
-            drawPetPommyPage(display);
-            break;
-        case STORE_PAGE:
-            drawStorePage(display);
-            break;
+    // Protect display operations with mutex
+    if (xSemaphoreTake(displayMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        // Full refresh - same as changePage function
+        display.clearScreen();
+        display.fillScreen(GxEPD_WHITE);
+        
+        // Draw the current page
+        switch (currentPage) {
+            case HOME_PAGE:
+                drawHomePage(display);
+                break;
+            case DRINK_WATER_PAGE:
+                drawDrinkWaterPage(display);
+                break;
+            case SUNBATHE_PAGE:
+                drawSunbathingPage(display);
+                break;
+            case PET_POMMY_PAGE:
+                drawPetPommyPage(display);
+                break;
+            case STORE_PAGE:
+                drawStorePage(display);
+                break;
+        }
+        
+        display.display();
+        xSemaphoreGive(displayMutex);
     }
-    
-    display.display();
     Serial.println("Full screen refresh completed");
 }
 
@@ -154,14 +173,28 @@ void checkSleepConditions() {
 void prepareForSleep() {
     Serial.println("Preparing for sleep - saving pet state...");
     
-    // Switch to home screen
+    // Switch to home screen first (this already includes display update)
     changePage(HOME_PAGE);
+    
+    // Wait a moment for the page change to complete
+    vTaskDelay(pdMS_TO_TICKS(100));
     
     // Show "Sleeping!" message
     showSleepMessageNow();
     
-    // Update display to show the message
-    updateDisplay();
+    // Properly update display with the sleep message using mutex protection
+    if (xSemaphoreTake(displayMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        // Draw the home page with the sleep message
+        drawHomePage(display);
+        
+        // Actually push the changes to the e-ink display
+        display.display();
+        
+        xSemaphoreGive(displayMutex);
+        Serial.println("Sleep message displayed on screen");
+    } else {
+        Serial.println("Failed to acquire display mutex for sleep message");
+    }
     
     // Give time for the message to be displayed
     vTaskDelay(pdMS_TO_TICKS(2000)); // 2 seconds to show "Sleeping!" message
@@ -184,7 +217,7 @@ void prepareForSleep() {
     Serial.println("Sleep preparation complete");
 }
 
-void handleWakeFromSleep() {
+void SleepManager::handleWakeFromSleep() {
     Serial.println("Handling wake from sleep...");
     
     // Check wake cause
@@ -211,11 +244,68 @@ void handleWakeFromSleep() {
             break;
     }
     
+    // Calculate sleep duration
+    unsigned long sleepDuration = millis() - sleepStartTime;
+    Serial.print("Sleep duration (ms): ");
+    Serial.println(sleepDuration);
+    
+    // Apply depletion based on sleep duration
+    if (xSemaphoreTake(petStateMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        // Calculate depletion intervals
+        unsigned long sunlightIntervals = sleepDuration / SUNLIGHT_DEPLETION_INTERVAL;
+        unsigned long thirstIntervals = sleepDuration / THIRST_DEPLETION_INTERVAL;
+        unsigned long petStatusIntervals = sleepDuration / PET_STATUS_DEPLETION_INTERVAL;
+        
+        // Apply sunlight depletion
+        if (sunlight > sunlightIntervals) {
+            sunlight -= sunlightIntervals;
+        } else {
+            sunlight = 0;
+        }
+        
+        // Apply thirst depletion
+        if (thirst > thirstIntervals) {
+            thirst -= thirstIntervals;
+        } else {
+            thirst = 0;
+        }
+        
+        // Apply pet status depletion
+        if (petStatus > petStatusIntervals) {
+            petStatus -= petStatusIntervals;
+        } else {
+            petStatus = 0;
+        }
+        
+        // Update last update time to current time
+        lastUpdateTime = millis();
+        
+        xSemaphoreGive(petStateMutex);
+        
+        // Save updated values
+        StorageEvent event = {StorageEvent::SAVE_ALL, 0};
+        xQueueSend(storageQueue, &event, pdMS_TO_TICKS(100));
+        
+        Serial.println("Applied depletion after sleep:");
+        Serial.print("Sunlight: "); Serial.println(sunlight);
+        Serial.print("Thirst: "); Serial.println(thirst);
+        Serial.print("Pet Status: "); Serial.println(petStatus);
+    }
+    
     // Update activity time directly (avoid recursion)
-    sleepManager.setLastActivityTime(millis());
+    setLastActivityTime(millis());
     
     // Force full page refresh after wake (clears any display artifacts)
     forceFullRefresh();
     
     Serial.println("Wake handling complete");
-} 
+}
+
+unsigned long SleepManager::getSleepDuration() {
+    if (inLightSleep) {
+        return millis() - sleepStartTime;
+    }
+    return 0;
+}
+
+ 

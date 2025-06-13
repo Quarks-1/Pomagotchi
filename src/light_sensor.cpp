@@ -39,6 +39,13 @@ bool isInSunlight() {
     return lightLevel >= MIN_SUNLIGHT_THRESHOLD && lightLevel <= MAX_SUNLIGHT_THRESHOLD;
 }
 
+uint16_t readProximityValue() {
+    if (!isLightSensorEnabled) {
+        return 0;
+    }
+    return vcnl4020.readProximity();  // Read proximity value from VCNL4020
+}
+
 void setLightSensorEnabled(bool enabled) {
     isLightSensorEnabled = enabled;
     if (enabled) {
