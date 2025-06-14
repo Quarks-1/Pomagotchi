@@ -38,17 +38,13 @@ void drawPetPommyPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
     display.setCursor(90, 100);
-    if (isPetting) {
-        display.print(getPetFillLevel());
-    } else {
-        display.print(petStatus);
-    }
+    display.print(getPetFillLevel());
     display.setFont(&FreeMono9pt7b);
     display.setCursor(90, 115);
     display.println("pets");
     
     // Draw status bar moved to the right (scale 0-10 to 0-100 for display)
-    uint8_t displayValue = isPetting ? (getPetFillLevel() * 10) : (petStatus * 10);
+    uint8_t displayValue = (getPetFillLevel() * 10);
     drawStatusBar(display, 140, 70, 50, 80, displayValue, UIConfig::CORNER_RADIUS);
 
     // Draw logged message if needed

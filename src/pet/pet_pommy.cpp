@@ -123,8 +123,6 @@ void togglePetting() {
         logPet(finalPetLevel);
         // Show logged message ONLY when exiting pet mode
         showLoggedMessageNow();
-        // Reset pet status to 0 so bar becomes empty again
-        resetPetStatus();
         
         // Reset detection state
         objectDetected = false;
