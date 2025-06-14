@@ -31,7 +31,7 @@ uint16_t getProximityLevel() {
 
 // Function to handle petting (manual adjustment via encoder)
 void handlePetting(int8_t direction) {
-    if (isPetting) {
+    if (isPetting && isDebugMode) {
         // Update pet fill level based on direction (0-10 scale, so multiply by 10 for percentage)
         int16_t multiplier = isDebugModeActive() ? 2 : 1;  // Larger steps in debug mode
         int16_t newLevel = petFillLevel + direction * multiplier;
