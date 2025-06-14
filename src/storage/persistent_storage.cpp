@@ -3,43 +3,45 @@
 
 bool initializeStorage() {
     Serial.println("Mounting LittleFS...");
-    if (!LittleFS.begin(true)) {  // true for format if mount fails
-        Serial.println("LittleFS mount failed");
-        return false;
+    if (!LittleFS.begin()) {  // Try mounting without formatting first
+        Serial.println("LittleFS mount failed, attempting to format...");
+        if (!LittleFS.begin(true)) {  // true for format if mount fails
+            Serial.println("LittleFS mount failed even after formatting");
+            return false;
+        }
+        Serial.println("LittleFS formatted and mounted successfully");
+    } else {
+        Serial.println("LittleFS mounted successfully");
     }
-    Serial.println("LittleFS mounted successfully");
     
-    // Format the filesystem to start fresh
-    Serial.println("Formatting LittleFS...");
-    if (!LittleFS.format()) {
-        Serial.println("Failed to format LittleFS");
-        return false;
+    // Only create initial config file if it doesn't exist
+    if (!LittleFS.exists(CONFIG_FILE)) {
+        Serial.println("Config file not found, creating with default values...");
+        if (!saveValues(100, 100, 10, 0)) {  // Default: sunlight=100, thirst=100, petStatus=10, stars=0
+            Serial.println("Failed to create initial config file");
+            return false;
+        }
+        Serial.println("Initial config file created successfully");
     }
-    Serial.println("LittleFS formatted successfully");
-    
-    // Create initial config file with default values
-    Serial.println("Creating initial config file with default values...");
-    if (!saveValues(100, 100, 10)) {  // Default: sunlight=100, thirst=100, petStatus=0
-        Serial.println("Failed to create initial config file");
-        return false;
-    }
-    Serial.println("Initial config file created successfully");
     
     return true;
 }
 
-bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus) {
+bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint8_t stars) {
     Serial.print("Saving values - Sunlight: ");
     Serial.print(sunlight);
     Serial.print(", Thirst: ");
     Serial.print(thirst);
     Serial.print(", PetStatus: ");
     Serial.println(petStatus);
+    Serial.print("Stars: ");
+    Serial.println(stars);
 
     StaticJsonDocument<200> doc;  // Increased from 128 to 200 to accommodate petStatus
     doc["sunlight"] = sunlight;
     doc["thirst"] = thirst;
     doc["petStatus"] = petStatus;
+    doc["stars"] = stars; // Preserve star count when saving other values
 
     File file = LittleFS.open(CONFIG_FILE, "w");
     if (!file) {
@@ -61,19 +63,51 @@ bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus) {
 bool saveSunlight(uint8_t value) {
     uint8_t currentThirst = loadThirst();
     uint8_t currentPetStatus = loadPetStatus();
-    return saveValues(value, currentThirst, currentPetStatus);
+    uint8_t currentStars = loadStars();
+    return saveValues(value, currentThirst, currentPetStatus, currentStars);
 }
 
 bool saveThirst(uint8_t value) {
     uint8_t currentSunlight = loadSunlight();
     uint8_t currentPetStatus = loadPetStatus();
-    return saveValues(currentSunlight, value, currentPetStatus);
+    uint8_t currentStars = loadStars();
+    return saveValues(currentSunlight, value, currentPetStatus, currentStars);
 }
 
 bool savePetStatus(uint8_t value) {
     uint8_t currentSunlight = loadSunlight();
     uint8_t currentThirst = loadThirst();
-    return saveValues(currentSunlight, currentThirst, value);
+    uint8_t currentStars = loadStars();
+    return saveValues(currentSunlight, currentThirst, value, currentStars);
+}
+
+bool saveStars(uint32_t stars) {
+    Serial.print("Saving stars: ");
+    Serial.println(stars);
+
+    StaticJsonDocument<200> doc;
+    
+    // Load existing values
+    doc["sunlight"] = loadSunlight();
+    doc["thirst"] = loadThirst();
+    doc["petStatus"] = loadPetStatus();
+    doc["stars"] = stars;  // Use the new stars value passed to the function
+
+    File file = LittleFS.open(CONFIG_FILE, "w");
+    if (!file) {
+        Serial.println("Failed to open config file for writing");
+        return false;
+    }
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println("Failed to write to config file");
+        file.close();
+        return false;
+    }
+
+    file.close();
+    Serial.println("Successfully saved stars");
+    return true;
 }
 
 uint8_t loadSunlight() {
@@ -171,6 +205,39 @@ uint8_t loadPetStatus() {
 
     uint8_t value = doc["petStatus"].as<uint8_t>();
     Serial.print("Loaded petStatus value: ");
+    Serial.println(value);
+    return value;
+}
+
+uint32_t loadStars() {
+    Serial.println("Loading stars value...");
+    if (!LittleFS.exists(CONFIG_FILE)) {
+        Serial.println("Config file not found, using default value 0");
+        return 0;  // Default value
+    }
+
+    File file = LittleFS.open(CONFIG_FILE, "r");
+    if (!file) {
+        Serial.println("Failed to open config file for reading");
+        return 0;
+    }
+
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc, file);
+    file.close();
+
+    if (error) {
+        Serial.println("Failed to parse config file");
+        return 0;
+    }
+
+    if (!doc.containsKey("stars")) {
+        Serial.println("Stars key not found in config, using default value 0");
+        return 0;
+    }
+
+    uint32_t value = doc["stars"].as<uint32_t>();
+    Serial.print("Loaded stars value: ");
     Serial.println(value);
     return value;
 } 

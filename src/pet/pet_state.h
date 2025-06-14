@@ -6,6 +6,7 @@
 extern uint8_t sunlight;
 extern uint8_t thirst;
 extern uint8_t petStatus;  // 0-10 pets
+extern uint32_t stars;
 extern unsigned long lastUpdateTime;
 
 // Function declarations
@@ -22,4 +23,9 @@ void logWater(uint8_t amount);
 void logPet(uint8_t amount);
 
 // Reset pet status to 0
-void resetPetStatus(); 
+void resetPetStatus();
+
+// Star reward functions
+void checkAndGrantStars();
+void grantStar();
+uint32_t getStars(); 

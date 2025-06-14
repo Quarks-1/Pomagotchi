@@ -19,7 +19,7 @@ extern bool isLightSensorEnabled;
 extern bool isBatteryMonitorEnabled;
 extern void handleSerialInput(char c);
 extern void updateDisplay();
-extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus);
+extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint8_t stars);
 
 // Task handles
 TaskHandle_t inputTaskHandle = NULL;
@@ -207,6 +207,7 @@ void storageTask(void* parameter) {
     uint8_t currentSunlight = 0;
     uint8_t currentThirst = 0;
     uint8_t currentPetStatus = 0;
+    uint8_t currentStars = 0;
     
     while (1) {
         shouldSave = false;
@@ -219,24 +220,28 @@ void storageTask(void* parameter) {
                         currentSunlight = event.value;
                         currentThirst = thirst;
                         currentPetStatus = petStatus;
+                        currentStars = stars;
                         shouldSave = true;
                         break;
                     case StorageEvent::SAVE_THIRST:
                         currentSunlight = sunlight;
                         currentThirst = event.value;
                         currentPetStatus = petStatus;
+                        currentStars = stars;
                         shouldSave = true;
                         break;
                     case StorageEvent::SAVE_PET_STATUS:
                         currentSunlight = sunlight;
                         currentThirst = thirst;
                         currentPetStatus = event.value;
+                        currentStars = stars;
                         shouldSave = true;
                         break;
                     case StorageEvent::SAVE_ALL:
                         currentSunlight = sunlight;
                         currentThirst = thirst;
                         currentPetStatus = petStatus;
+                        currentStars = stars;
                         shouldSave = true;
                         break;
                 }
@@ -252,6 +257,7 @@ void storageTask(void* parameter) {
                     currentSunlight = sunlight;
                     currentThirst = thirst;
                     currentPetStatus = petStatus;
+                    currentStars = stars;
                     shouldSave = true;
                 }
                 xSemaphoreGive(petStateMutex);
@@ -260,7 +266,7 @@ void storageTask(void* parameter) {
         
         // Perform save if needed
         if (shouldSave) {
-            if (saveValues(currentSunlight, currentThirst, currentPetStatus)) {
+            if (saveValues(currentSunlight, currentThirst, currentPetStatus, currentStars)) {
                 lastSavedSunlight = currentSunlight;
                 lastSavedThirst = currentThirst;
                 lastSavedPetStatus = currentPetStatus;
@@ -288,6 +294,9 @@ void logicTask(void* parameter) {
             if (currentTime - lastDepletionUpdate >= DEPLETION_UPDATE_INTERVAL) {
                 updateDepletion(sunlight, thirst, petStatus, lastUpdateTime);
                 lastDepletionUpdate = currentTime;
+                
+                // Check for star rewards every second
+                checkAndGrantStars();
             }
             
             // Update sunlight level based on sensor readings

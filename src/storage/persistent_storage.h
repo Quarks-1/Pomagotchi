@@ -11,7 +11,11 @@ bool initializeStorage();
 bool saveSunlight(uint8_t value);
 bool saveThirst(uint8_t value);
 bool savePetStatus(uint8_t value);
-bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus);
+bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint8_t stars);
 uint8_t loadSunlight();
 uint8_t loadThirst();
-uint8_t loadPetStatus(); 
+uint8_t loadPetStatus();
+
+// Star reward functions
+bool saveStars(uint32_t stars);
+uint32_t loadStars(); 

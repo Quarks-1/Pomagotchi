@@ -189,188 +189,203 @@ void handleSerialInput(char c) {
         if (commandBuffer.length() > 0) {
             // Process the command
             if (commandBuffer == "debug") {
-            isDebugMode = !isDebugMode;
-            Serial.print("Debug mode: ");
-            Serial.println(isDebugMode ? "ON" : "OFF");
-        }
+                isDebugMode = !isDebugMode;
+                Serial.print("Debug mode: ");
+                Serial.println(isDebugMode ? "ON" : "OFF");
+            }
             else if (commandBuffer == "left") {
-            moveCursor(-1);
-            Serial.println("Moved cursor left");
-        }
+                moveCursor(-1);
+                Serial.println("Moved cursor left");
+            }
             else if (commandBuffer == "right") {
-            moveCursor(1);
-            Serial.println("Moved cursor right");
-        }
+                moveCursor(1);
+                Serial.println("Moved cursor right");
+            }
             else if (commandBuffer == "enter") {
-            handleCursorSelection();
-            Serial.println("Selected current item");
-        }
+                handleCursorSelection();
+                Serial.println("Selected current item");
+            }
             else if (commandBuffer == "home") {
-            changePage(HOME_PAGE);
-            Serial.println("Changed to home page");
-        }
+                changePage(HOME_PAGE);
+                Serial.println("Changed to home page");
+            }
+            else if (commandBuffer == "stars") {
+                Serial.print("Total stars earned: ");
+                Serial.println(getStars());
+            }
+            else if (commandBuffer.startsWith("set_stars ")) {
+                // Extract number after "set_stars "
+                uint32_t value = commandBuffer.substring(10).toInt();
+                if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
+                    stars = value;
+                    saveStars(stars);
+                    xSemaphoreGive(petStateMutex);
+                }
+                Serial.print("Set stars to: ");
+                Serial.println(stars);
+            }
             else if (commandBuffer == "water") {
-            changePage(DRINK_WATER_PAGE);
-            Serial.println("Changed to water page");
-        }
+                changePage(DRINK_WATER_PAGE);
+                Serial.println("Changed to water page");
+            }
             else if (commandBuffer == "sun") {
-            changePage(SUNBATHE_PAGE);
-            Serial.println("Changed to sunbathing page");
-        }
+                changePage(SUNBATHE_PAGE);
+                Serial.println("Changed to sunbathing page");
+            }
             else if (commandBuffer == "pet") {
-            changePage(PET_POMMY_PAGE);
-            Serial.println("Changed to pet pommy page");
-        }
+                changePage(PET_POMMY_PAGE);
+                Serial.println("Changed to pet pommy page");
+            }
             else if (commandBuffer == "store") {
-            changePage(STORE_PAGE);
-            Serial.println("Changed to store page");
-        }
+                changePage(STORE_PAGE);
+                Serial.println("Changed to store page");
+            }
             else if (commandBuffer.startsWith("set_thirst ")) {
-            // Extract number after "set_thirst "
+                // Extract number after "set_thirst "
                 int value = commandBuffer.substring(11).toInt();
                 if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
-            thirst = constrain(value, 0, 100);
+                    thirst = constrain(value, 0, 100);
                     StorageEvent event = {StorageEvent::SAVE_THIRST, thirst};
                     xQueueSend(storageQueue, &event, 0);
                     xSemaphoreGive(petStateMutex);
                 }
-            Serial.print("Set thirst to: ");
-            Serial.println(thirst);
-        }
+                Serial.print("Set thirst to: ");
+                Serial.println(thirst);
+            }
             else if (commandBuffer.startsWith("set_sunlight ")) {
-            // Extract number after "set_sunlight "
+                // Extract number after "set_sunlight "
                 int value = commandBuffer.substring(13).toInt();
                 if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
-            sunlight = constrain(value, 0, 100);
+                    sunlight = constrain(value, 0, 100);
                     StorageEvent event = {StorageEvent::SAVE_SUNLIGHT, sunlight};
                     xQueueSend(storageQueue, &event, 0);
                     xSemaphoreGive(petStateMutex);
                 }
-            Serial.print("Set sunlight to: ");
-            Serial.println(sunlight);
-        }
+                Serial.print("Set sunlight to: ");
+                Serial.println(sunlight);
+            }
             else if (commandBuffer.startsWith("set_pets ")) {
-            // Extract number after "set_pets "
+                // Extract number after "set_pets "
                 int value = commandBuffer.substring(9).toInt();
                 if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
-            petStatus = constrain(value, 0, 10);
+                    petStatus = constrain(value, 0, 10);
                     StorageEvent event = {StorageEvent::SAVE_PET_STATUS, petStatus};
                     xQueueSend(storageQueue, &event, 0);
                     xSemaphoreGive(petStateMutex);
                 }
-            Serial.print("Set pet status to: ");
-            Serial.println(petStatus);
-        }
+                Serial.print("Set pet status to: ");
+                Serial.println(petStatus);
+            }
             else if (commandBuffer.startsWith("set_proximity ")) {
-            // Extract number after "set_proximity "
+                // Extract number after "set_proximity "
                 int value = commandBuffer.substring(14).toInt();
                 setProximityThreshold(value);
-        }
+            }
             else if (commandBuffer == "proximity") {
-            Serial.print("Current proximity value: ");
-            Serial.println(getProximityLevel());
-            Serial.print("Current proximity threshold: ");
-            Serial.println(getProximityThreshold());
-        }
+                Serial.print("Current proximity value: ");
+                Serial.println(getProximityLevel());
+                Serial.print("Current proximity threshold: ");
+                Serial.println(getProximityThreshold());
+            }
             else if (commandBuffer == "status") {
-            Serial.println("Current Status:");
+                Serial.println("Current Status:");
                 if (xSemaphoreTake(petStateMutex, portMAX_DELAY) == pdTRUE) {
-            Serial.print("Thirst: ");
-            Serial.println(thirst);
-            Serial.print("Sunlight: ");
-            Serial.println(sunlight);
-            Serial.print("Pet Status: ");
-            Serial.println(petStatus);
+                    Serial.print("Thirst: ");
+                    Serial.println(thirst);
+                    Serial.print("Sunlight: ");
+                    Serial.println(sunlight);
+                    Serial.print("Pet Status: ");
+                    Serial.println(petStatus);
                     xSemaphoreGive(petStateMutex);
                 }
-            Serial.print("Current Page: ");
-            switch (currentPage) {
-                case HOME_PAGE:
-                    Serial.println("Home");
-                    break;
-                case DRINK_WATER_PAGE:
-                    Serial.println("Water");
-                    break;
-                case SUNBATHE_PAGE:
-                    Serial.println("Sunbathing");
-                    break;
-                case PET_POMMY_PAGE:
-                    Serial.println("Pet Pommy");
-                    break;
-                case STORE_PAGE:
-                    Serial.println("Store");
-                    break;
-            }
-        }
-            else if (commandBuffer == "sleep_enable") {
-            sleepManager.setSleepEnabled(true);
-            Serial.println("Sleep mode enabled");
-        }
-            else if (commandBuffer == "sleep_disable") {
-            sleepManager.setSleepEnabled(false);
-            Serial.println("Sleep mode disabled");
-        }
-            else if (commandBuffer == "sleep_status") {
-            Serial.print("Sleep enabled: ");
-            Serial.println(sleepManager.isInLightSleep() ? "NO (currently in sleep)" : "YES");
-            Serial.print("Time since last activity: ");
-            Serial.print(sleepManager.getTimeSinceLastActivity() / 1000);
-            Serial.println(" seconds");
-            Serial.print("Sleep timeout: ");
-            Serial.print(INACTIVITY_TIMEOUT_MS / 1000);
-            Serial.println(" seconds");
-        }
-            else if (commandBuffer == "sleep_now") {
-            Serial.println("Forcing light sleep...");
-            sleepManager.enterLightSleep();
-        }
-            else if (commandBuffer == "sleep_test") {
-            Serial.println("Testing sleep message display and entering sleep...");
-            sleepManager.enterLightSleep();
-        }
-            else if (commandBuffer == "stack_info") {
-            Serial.println("Task Stack Information:");
-            Serial.print("Input task free stack: ");
-            Serial.println(uxTaskGetStackHighWaterMark(inputTaskHandle));
-            Serial.print("Display task free stack: ");
-            Serial.println(uxTaskGetStackHighWaterMark(displayTaskHandle));
-            Serial.print("Storage task free stack: ");
-            Serial.println(uxTaskGetStackHighWaterMark(storageTaskHandle));
-            Serial.print("Logic task free stack: ");
-            Serial.println(uxTaskGetStackHighWaterMark(logicTaskHandle));
-            Serial.print("Sleep task free stack: ");
-            Serial.println(uxTaskGetStackHighWaterMark(sleepTaskHandle));
-            Serial.print("Free heap: ");
-            Serial.println(esp_get_free_heap_size());
-        }
-            else if (commandBuffer == "help") {
-            Serial.println("Available commands:");
-            Serial.println("left - Move cursor left");
-            Serial.println("right - Move cursor right");
-            Serial.println("enter - Select current item");
-            Serial.println("home - Go to home page");
-            Serial.println("water - Go to water page");
-            Serial.println("sun - Go to sunbathing page");
-            Serial.println("pet - Go to pet pommy page");
-            Serial.println("store - Go to store page");
-            Serial.println("set_thirst <0-100> - Set thirst level");
-            Serial.println("set_sunlight <0-100> - Set sunlight level");
-            Serial.println("set_pets <0-10> - Set pet status level");
-            Serial.println("set_proximity <value> - Set proximity threshold");
-            Serial.println("proximity - Show current proximity value & threshold");
-            Serial.println("status - Show current status");
-            Serial.println("help - Show this help message");
-            Serial.println("add - Increase sunlight level (only works in sunbathing mode)");
-            Serial.println("sleep_enable - Enable sleep mode");
-            Serial.println("sleep_disable - Disable sleep mode");
-            Serial.println("sleep_status - Show sleep status");
-            Serial.println("sleep_now - Force enter light sleep");
-            Serial.println("sleep_test - Test sleep mode with message display");
-            Serial.println("stack_info - Show task stack usage and memory info");
-        }
-            commandBuffer = "";
+                Serial.print("Current Page: ");
+                switch (currentPage) {
+                    case HOME_PAGE:
+                        Serial.println("Home");
+                        break;
+                    case DRINK_WATER_PAGE:
+                        Serial.println("Water");
+                        break;
+                    case SUNBATHE_PAGE:
+                        Serial.println("Sunbathing");
+                        break;
+                    case PET_POMMY_PAGE:
+                        Serial.println("Pet Pommy");
+                        break;
+                    case STORE_PAGE:
+                        Serial.println("Store");
+                        break;
                 }
-            } else {
+            }
+            else if (commandBuffer == "sleep_enable") {
+                sleepManager.setSleepEnabled(true);
+                Serial.println("Sleep mode enabled");
+            }
+            else if (commandBuffer == "sleep_disable") {
+                sleepManager.setSleepEnabled(false);
+                Serial.println("Sleep mode disabled");
+            }
+            else if (commandBuffer == "sleep_status") {
+                Serial.print("Sleep enabled: ");
+                Serial.println(sleepManager.isInLightSleep() ? "NO (currently in sleep)" : "YES");
+                Serial.print("Time since last activity: ");
+                Serial.print(sleepManager.getTimeSinceLastActivity() / 1000);
+                Serial.println(" seconds");
+                Serial.print("Sleep timeout: ");
+                Serial.print(INACTIVITY_TIMEOUT_MS / 1000);
+                Serial.println(" seconds");
+            }
+            else if (commandBuffer == "sleep_now") {
+                Serial.println("Forcing light sleep...");
+                sleepManager.enterLightSleep();
+            }
+            else if (commandBuffer == "sleep_test") {
+                Serial.println("Testing sleep message display and entering sleep...");
+                sleepManager.enterLightSleep();
+            }
+            else if (commandBuffer == "stack_info") {
+                Serial.println("Task Stack Information:");
+                Serial.print("Input task free stack: ");
+                Serial.println(uxTaskGetStackHighWaterMark(inputTaskHandle));
+                Serial.print("Display task free stack: ");
+                Serial.println(uxTaskGetStackHighWaterMark(displayTaskHandle));
+                Serial.print("Storage task free stack: ");
+                Serial.println(uxTaskGetStackHighWaterMark(storageTaskHandle));
+                Serial.print("Logic task free stack: ");
+                Serial.println(uxTaskGetStackHighWaterMark(logicTaskHandle));
+                Serial.print("Sleep task free stack: ");
+                Serial.println(uxTaskGetStackHighWaterMark(sleepTaskHandle));
+                Serial.print("Free heap: ");
+                Serial.println(esp_get_free_heap_size());
+            }
+            else if (commandBuffer == "help") {
+                Serial.println("Available commands:");
+                Serial.println("left - Move cursor left");
+                Serial.println("right - Move cursor right");
+                Serial.println("enter - Select current item");
+                Serial.println("home - Go to home page");
+                Serial.println("water - Go to water page");
+                Serial.println("sun - Go to sunbathing page");
+                Serial.println("pet - Go to pet pommy page");
+                Serial.println("store - Go to store page");
+                Serial.println("set_thirst <0-100> - Set thirst level");
+                Serial.println("set_sunlight <0-100> - Set sunlight level");
+                Serial.println("set_pets <0-10> - Set pet status level");
+                Serial.println("set_proximity <value> - Set proximity threshold");
+                Serial.println("proximity - Show current proximity value & threshold");
+                Serial.println("status - Show current status");
+                Serial.println("stars - Show total stars earned");
+                Serial.println("set_stars <value> - Set star count");
+                Serial.println("sleep_enable - Enable sleep mode");
+                Serial.println("sleep_disable - Disable sleep mode");
+                Serial.println("sleep_status - Show sleep status");
+                Serial.println("sleep_now - Force enter light sleep");
+                Serial.println("sleep_test - Test sleep mode with message display");
+                Serial.println("stack_info - Show task stack usage and memory info");
+            }
+            commandBuffer = "";
+        }
+    } else {
         commandBuffer += c;
     }
 }
