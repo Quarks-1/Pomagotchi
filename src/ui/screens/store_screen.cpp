@@ -32,7 +32,7 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     display.fillRect(115, 5, 25, 20, GxEPD_WHITE);
     display.setCursor(115, 20);
     display.print(getStars());
-    drawStarCluster(display, 140, 5, 16, 16);
+    drawStarCluster(display, 140, 10, 16, 16);
     
     drawStarCluster(display, 168, 0, 32, 32);
 
