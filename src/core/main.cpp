@@ -10,6 +10,7 @@
 #include "hardware/encoder.h"
 #include "storage/persistent_storage.h"
 #include "hardware/light_sensor.h"
+#include "hardware/battery_monitor.h"
 #include "activities/sunbathing.h"
 #include "pet/pet_pommy.h"
 #include "tasks.h"
@@ -67,6 +68,11 @@ void setup() {
     // Initialize light sensor
     if (!initializeLightSensor()) {
         Serial.println("Light sensor not found - continuing without it");
+    }
+    
+    // Initialize battery monitor
+    if (!initializeBatteryMonitor()) {
+        Serial.println("Battery monitor not found - continuing without it");
     }
     
     // Initialize pet state

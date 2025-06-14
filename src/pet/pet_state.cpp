@@ -3,6 +3,7 @@
 #include "storage/persistent_storage.h"
 #include "activities/sunbathing.h"
 #include "core/tasks.h"
+#include "hardware/battery_monitor.h"
 #include <Arduino.h>
 
 // Initialize pet state variables
@@ -34,10 +35,8 @@ void updatePetState() {
 }
 
 uint8_t getBatteryLevel() {
-    // Read battery voltage and convert to percentage
-    float voltage = analogRead(A0) * (3.3 / 1023.0) * 2; // Assuming voltage divider
-    uint8_t percentage = (voltage - 3.0) * 100 / (4.2 - 3.0); // LiPo battery range
-    return constrain(percentage, 0, 100);
+    // Use the new battery monitor to get percentage
+    return static_cast<uint8_t>(getBatteryPercent());
 }
 
 void logWater(uint8_t amount) {

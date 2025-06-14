@@ -10,11 +10,13 @@
 #include "pet/pet_pommy.h"
 #include "pet/depletion.h"
 #include "hardware/light_sensor.h"
+#include "hardware/battery_monitor.h"
 #include "system/sleep_manager.h"
 
 // External declarations
 extern Encoder encoder;
 extern bool isLightSensorEnabled;
+extern bool isBatteryMonitorEnabled;
 extern void handleSerialInput(char c);
 extern void updateDisplay();
 extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus);
@@ -135,9 +137,10 @@ void inputTask(void* parameter) {
             }
         }
         
-        // Read and print light sensor value periodically
+        // Read and print sensor values periodically
         unsigned long currentTime = millis();
         if (currentTime - lastSensorRead >= SENSOR_READ_INTERVAL) {
+            // Log light sensor readings
             if (isLightSensorEnabled) {
                 uint16_t lightLevel = getLightLevel();
                 Serial.print("Light sensor reading: ");
@@ -146,6 +149,19 @@ void inputTask(void* parameter) {
                 Serial.print("In sunlight: ");
                 Serial.println(isInSunlight() ? "Yes" : "No");
             }
+            
+            // Log battery readings
+            if (isBatteryMonitorEnabled) {
+                float voltage = getBatteryVoltage();
+                float percentage = getBatteryPercent();
+                Serial.print("Battery voltage: ");
+                Serial.print(voltage, 2);
+                Serial.println("V");
+                Serial.print("Battery level: ");
+                Serial.print(percentage, 1);
+                Serial.println("%");
+            }
+            
             lastSensorRead = currentTime;
         }
         
