@@ -24,6 +24,16 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     
     drawTitle(display, 45, 20, "Store");
     drawStarCluster(display, 0, 0, 32, 32);
+    
+    // Draw star counter
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeMonoBold9pt7b);
+    // Clear the area for the number
+    display.fillRect(115, 5, 25, 20, GxEPD_WHITE);
+    display.setCursor(115, 20);
+    display.print(getStars());
+    drawStarCluster(display, 140, 5, 16, 16);
+    
     drawStarCluster(display, 168, 0, 32, 32);
 
     // Change screen buttons with cursor selection
