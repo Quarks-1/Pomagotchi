@@ -18,4 +18,10 @@ uint8_t loadPetStatus();
 
 // Star reward functions
 bool saveStars(uint32_t stars);
-uint32_t loadStars(); 
+uint32_t loadStars();
+
+// Hat functions
+bool saveHatPurchased(uint8_t hatType, bool purchased);
+bool saveHatWearing(uint8_t hatType, bool wearing);
+bool loadHatPurchased(uint8_t hatType);
+bool loadHatWearing(uint8_t hatType); 

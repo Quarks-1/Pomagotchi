@@ -416,6 +416,23 @@ void drawChangeScreenButton(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& d
             // Draw the right diagonal of the arrow head
             display.drawLine(centerX - i, centerY - arrowSize/2, centerX + arrowSize/4 - i, centerY - arrowSize/4, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
         }
+    } else if (strcmp(arrow_direction, "down") == 0) {
+        // Draw down arrow with thickness
+        for (uint8_t i = 0; i < arrow_thickness; i++) {
+            display.drawLine(centerX - i, centerY - arrowSize/2, centerX - i, centerY + arrowSize/2, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX - i, centerY + arrowSize/2, centerX - arrowSize/4 - i, centerY + arrowSize/4, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+            display.drawLine(centerX - i, centerY + arrowSize/2, centerX + arrowSize/4 - i, centerY + arrowSize/4, is_selected ? GxEPD_WHITE : GxEPD_BLACK);
+        }
+    } else if (strcmp(arrow_direction, "buy") == 0) {
+        // Draw buy text
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(centerX - 15, centerY + 5);
+        display.print("buy");
+    } else if (strcmp(arrow_direction, "wear") == 0) {
+        // Draw equip text
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(centerX - 23, centerY + 5);
+        display.print("wear");
     }
 } 
 

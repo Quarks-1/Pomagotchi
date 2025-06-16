@@ -8,6 +8,7 @@
 #include "activities/water_logging.h"
 #include "activities/sunbathing.h"
 #include "pet/pet_pommy.h"
+#include "activities/store_purchasing.h"
 #include "pet/depletion.h"
 #include "hardware/light_sensor.h"
 #include "hardware/battery_monitor.h"

@@ -1,3 +1,4 @@
+#include "../logged_message.h"
 #include "ui/screens/screens.h"
 #include "assets/sprites.h"
 #include "pet/pet_state.h"
@@ -5,6 +6,9 @@
 #include "ui/ui_components.h"
 #include "ui/ui_config.h"
 #include "ui/cursor.h"
+#include "../activities/store_purchasing.h"
+#include <string> 
+
 
 void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     static bool firstDraw = true;
@@ -36,14 +40,95 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     
     drawStarCluster(display, 168, 0, 32, 32);
 
-    // Change screen buttons with cursor selection
-    drawChangeScreenButton(display, 10, 170, 85, 30, "left", cursorPosition == 0, 3, 3, UIConfig::CORNER_RADIUS);
-    drawChangeScreenButton(display, 90, 170, 30, 30, "up", cursorPosition == 1, 3, 3, UIConfig::CORNER_RADIUS);
-    drawChangeScreenButton(display, 115, 170, 85, 30, "right", cursorPosition == 2, 3, 3, UIConfig::CORNER_RADIUS);
-
-    // Draw current animation frame
+    // Draw current animation frame (left side)
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
     drawAnimationFrame(display, 0, 75, currentFrame);
+
+    // Carousel interface to the right of the animation (always visible)
+    // Clear the area first
+    display.fillRect(70, 40, 130, 120, GxEPD_WHITE);
+    
+    // Hat name and price on the same line
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(75, 55);
+    display.print(HAT_NAMES[selectedHat]);
+    display.print(" ");
+    display.print(HAT_PRICES[selectedHat]);
+    // Draw single star next to price instead of "stars"
+    drawSingleStar(display, 75 + (strlen(HAT_NAMES[selectedHat]) + 1 + std::to_string(HAT_PRICES[selectedHat]).length()) * 11 + 7, 50, 8);
+    
+    // Clear status message area to avoid overlaps
+    display.fillRect(0, 30, 65, 40, GxEPD_WHITE);
+    
+    // Status message above the pet sprite
+    display.setFont(&FreeMono9pt7b);
+    display.setCursor(0, 45);
+    if (isHatPurchased(selectedHat)) {
+        display.print("owned!");
+    } else if (canAffordHat(selectedHat)) {
+        display.println("can");
+        display.setCursor(0, 60);
+        display.print("buy!");
+    } else {
+        display.println("too");
+        display.setCursor(0, 60);
+        display.print("poor");
+    }
+    
+    // Hat drawing area - show a simple representation
+    display.fillRect(75, 65, 120, 40, GxEPD_WHITE);
+    display.drawRect(75, 65, 120, 40, GxEPD_BLACK);
+    
+    // Draw hat representation based on type
+    display.setFont(&FreeMono9pt7b);
+    display.setCursor(85, 80);
+    switch(selectedHat) {
+        case 1: // Tophat
+            display.print("    [===]");
+            display.setCursor(85, 95);
+            display.print("    |___|");
+            break;
+        case 2: // Cowboy hat
+            display.print("  /~~~~~\\");
+            display.setCursor(85, 95);
+            display.print("  \\_____/");
+            break;
+        case 3: // Party hat
+            display.print("     /\\");
+            display.setCursor(85, 95);
+            display.print("    /  \\");
+            break;
+        case 4: // Star hat
+            display.print("     *");
+            display.setCursor(85, 95);
+            display.print("   /---\\");
+            break;
+    }
+    
+    // Equip status box above the carousel buttons
+    display.fillRect(75, 110, 120, 20, GxEPD_WHITE);
+    display.drawRect(75, 110, 120, 20, GxEPD_BLACK);
+    display.setFont(&FreeMono9pt7b);
+    display.setCursor(80, 125);
+    if (isHatEquipped(selectedHat)) {
+        display.print("EQUIPPED");
+    } else if (isHatPurchased(selectedHat)) {
+        display.print("UNEQUIPPED");  
+    } else {
+        display.print("NOT OWNED");
+    }
+    
+    // Three buttons in a row: Next Hat | Buy/Equip | Exit
+    // Only highlight if in purchasing mode
+    // Change button text based on hat ownership
+    const char* actionButtonText = isHatPurchased(selectedHat) ? "wear" : "buy";
+    drawChangeScreenButton(display, 70, 135, 40, 25, "right", isPurchasing && cursorPosition == 0, 2, 2, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 110, 135, 50, 25, actionButtonText, isPurchasing && cursorPosition == 1, 2, 2, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 160, 135, 40, 25, "down", isPurchasing && cursorPosition == 2, 2, 2, UIConfig::CORNER_RADIUS);
+
+    drawChangeScreenButton(display, 10, 170, 85, 30, "left", !isPurchasing && cursorPosition == 0, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 90, 170, 30, 30, "up", !isPurchasing && cursorPosition == 1, 3, 3, UIConfig::CORNER_RADIUS);
+    drawChangeScreenButton(display, 115, 170, 85, 30, "right", !isPurchasing && cursorPosition == 2, 3, 3, UIConfig::CORNER_RADIUS);
 
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
 } 

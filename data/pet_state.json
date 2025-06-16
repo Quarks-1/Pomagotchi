@@ -2,5 +2,23 @@
     "sunlight": 100,
     "thirst": 100,
     "petStatus": 10,
-    "stars": 0
+    "stars": 0,
+    "hats": {
+        "topHat": {
+            "purchased": false,
+            "wearing": false
+        },
+        "cowboyHat": {
+            "purchased": false,
+            "wearing": false
+        },
+        "partyHat": {
+            "purchased": false,
+            "wearing": false
+        },
+        "starHat": {
+            "purchased": false,
+            "wearing": false
+        }
+    }
 } 
