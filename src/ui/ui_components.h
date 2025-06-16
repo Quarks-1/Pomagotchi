@@ -42,6 +42,10 @@ void drawStarCluster(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
                     int16_t width,
                     int16_t height);
 
+void drawSingleStar(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                   int16_t x, int16_t y,
+                   int16_t size);
+
 void drawAnimationFrame(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
                        int16_t x, int16_t y,
                        const AnimationFrame& frame);

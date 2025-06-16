@@ -144,6 +144,41 @@ void drawStarCluster(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
     }
 }
 
+void drawSingleStar(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                   int16_t x, int16_t y,
+                   int16_t size) {
+    // Calculate points for a 5-pointed star
+    const int numPoints = 5;
+    int16_t outerPoints[numPoints * 2];  // x,y coordinates for outer points
+    int16_t innerPoints[numPoints * 2];  // x,y coordinates for inner points
+    
+    // Calculate outer points
+    for (int i = 0; i < numPoints; i++) {
+        float angle = i * 2 * M_PI / numPoints - M_PI / 2;  // Start from top point
+        outerPoints[i * 2] = x + size * cos(angle);
+        outerPoints[i * 2 + 1] = y + size * sin(angle);
+    }
+    
+    // Calculate inner points (rotated by 36 degrees and scaled down)
+    float innerRadius = size * 0.4;  // Inner radius is 40% of outer radius
+    for (int i = 0; i < numPoints; i++) {
+        float angle = i * 2 * M_PI / numPoints + M_PI / numPoints - M_PI / 2;  // Rotate by 36 degrees (π/5)
+        innerPoints[i * 2] = x + innerRadius * cos(angle);
+        innerPoints[i * 2 + 1] = y + innerRadius * sin(angle);
+    }
+    
+    // Draw the star by connecting points
+    for (int i = 0; i < numPoints; i++) {
+        int next = (i + 1) % numPoints;
+        // Draw line from outer point to next inner point
+        display.drawLine(outerPoints[i * 2], outerPoints[i * 2 + 1],
+                        innerPoints[i * 2], innerPoints[i * 2 + 1], GxEPD_BLACK);
+        // Draw line from inner point to next outer point
+        display.drawLine(innerPoints[i * 2], innerPoints[i * 2 + 1],
+                        outerPoints[next * 2], outerPoints[next * 2 + 1], GxEPD_BLACK);
+    }
+}
+
 void drawAnimationFrame(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
                        int16_t x, int16_t y,
                        const AnimationFrame& frame) {

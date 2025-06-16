@@ -14,7 +14,7 @@ bool initializeBatteryMonitor() {
     }
     
     // Configure for 3.7V LiPo battery
-    lc.setPackSize(LC709203F_APA_500MAH);
+    lc.setPackSize(LC709203F_APA_2000MAH);
     
     isBatteryMonitorEnabled = true;
     Serial.println("LC709203F battery monitor initialized successfully");
