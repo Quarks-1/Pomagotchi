@@ -33,7 +33,7 @@
 GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(GxEPD2_154_D67(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN));
 Page currentPage = HOME_PAGE;
 Page previousPage = HOME_PAGE;  // Track previous page for detecting changes
-bool isDebugMode = true;  // Global debug mode flag
+bool isDebugMode = false;  // Global debug mode flag
 bool isEncoderEnabled = true;  // Global flag to enable/disable encoder functionality
 bool isLightSensorEnabled = true; // Global flag to enable/disable light sensor functionality
 
