@@ -1,6 +1,7 @@
 #include "../logged_message.h"
 #include "ui/screens/screens.h"
 #include "assets/sprites.h"
+#include "assets/hat_sprites.h"
 #include "pet/pet_state.h"
 #include "animation/animation.h"
 #include "ui/ui_components.h"
@@ -33,8 +34,8 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
     // Clear the area for the number
-    display.fillRect(115, 5, 25, 20, GxEPD_WHITE);
-    display.setCursor(115, 20);
+    display.fillRect(112, 5, 43, 20, GxEPD_WHITE);
+    display.setCursor(112, 20);
     display.print(getStars());
     drawSingleStar(display, 155, 15, 8);  // Small star next to counter
     
@@ -42,7 +43,12 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
 
     // Draw current animation frame (left side)
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
-    drawAnimationFrame(display, 0, 75, currentFrame);
+    
+    // Try to draw sprite with equipped hat (clears combined area and draws both)
+    if (!drawEquippedHatOnSprite(display, -5, 75, currentFrame)) {
+        // No hat equipped, draw sprite normally
+        drawAnimationFrame(display, -5, 75, currentFrame);
+    }
 
     // Carousel interface to the right of the animation (always visible)
     // Clear the area first
@@ -75,34 +81,23 @@ void drawStorePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
         display.print("poor");
     }
     
-    // Hat drawing area - show a simple representation
+    // Hat drawing area - show bitmap sprite
     display.fillRect(75, 65, 120, 40, GxEPD_WHITE);
     display.drawRect(75, 65, 120, 40, GxEPD_BLACK);
     
-    // Draw hat representation based on type
-    display.setFont(&FreeMono9pt7b);
-    display.setCursor(85, 80);
-    switch(selectedHat) {
-        case 1: // Tophat
-            display.print("    [===]");
-            display.setCursor(85, 95);
-            display.print("    |___|");
-            break;
-        case 2: // Cowboy hat
-            display.print("  /~~~~~\\");
-            display.setCursor(85, 95);
-            display.print("  \\_____/");
-            break;
-        case 3: // Party hat
-            display.print("     /\\");
-            display.setCursor(85, 95);
-            display.print("    /  \\");
-            break;
-        case 4: // Star hat
-            display.print("     *");
-            display.setCursor(85, 95);
-            display.print("   /---\\");
-            break;
+    // Draw hat sprite centered in the area
+    const uint8_t* hatSprite = getHatSprite(selectedHat);
+    if (hatSprite != nullptr) {
+        // Get sprite dimensions
+        uint8_t spriteWidth = hatSprite[0];
+        uint8_t spriteHeight = hatSprite[1];
+        
+        // Center the sprite in the 120x40 area
+        int16_t spriteX = 75 + (120 - spriteWidth) / 2;
+        int16_t spriteY = 65 + (40 - spriteHeight) / 2;
+        
+        // Draw the hat sprite
+        drawHatSprite(display, spriteX, spriteY, hatSprite);
     }
     
     // Equip status box above the carousel buttons

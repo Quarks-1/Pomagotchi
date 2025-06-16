@@ -67,15 +67,24 @@ void drawHomePage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display) {
     
     // Draw pet sprite - use sniff_0 when entering sleep mode, otherwise use normal animation
     if (shouldShowSleepMessage() || sleepManager.isInLightSleep()) {
-        // Clear the animation area first
-        display.fillRect(-5, 75, sniff_0[0], sniff_0[1] + 3, GxEPD_WHITE);
+        // Create frame for sleeping sprite
+        AnimationFrame sleepFrame = {sniff_0, sniff_0[0], sniff_0[1]};
         
-        // Draw the sniff_0 sprite for sleep mode
-        display.drawBitmap(-5, 75, &sniff_0[2], sniff_0[0], sniff_0[1], GxEPD_BLACK);
+        // Try to draw sprite with equipped hat (clears combined area and draws both)
+        if (!drawEquippedHatOnSprite(display, -5, 75, sleepFrame)) {
+            // No hat equipped, draw sprite normally
+            display.fillRect(-5, 75, sniff_0[0], sniff_0[1] + 3, GxEPD_WHITE);
+            display.drawBitmap(-5, 75, &sniff_0[2], sniff_0[0], sniff_0[1], GxEPD_BLACK);
+        }
     } else {
-        // Draw normal animation frame
+        // Get current animation frame
         const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
-        drawAnimationFrame(display, -5, 75, currentFrame);
+        
+        // Try to draw sprite with equipped hat (clears combined area and draws both)
+        if (!drawEquippedHatOnSprite(display, -5, 75, currentFrame)) {
+            // No hat equipped, draw sprite normally
+            drawAnimationFrame(display, -5, 75, currentFrame);
+        }
     }
     
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);

@@ -1,4 +1,6 @@
 #include "ui_components.h"
+#include "assets/hat_sprites.h"
+#include "activities/store_purchasing.h"
 
 // Standard dimensions and styling
 const int BUTTON_WIDTH = 80;
@@ -187,6 +189,63 @@ void drawAnimationFrame(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& displ
     
     // Draw the frame
     display.drawBitmap(x, y, &frame.data[2], frame.width, frame.height, GxEPD_BLACK);
+}
+
+void drawHatSprite(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                   int16_t x, int16_t y,
+                   const uint8_t* hatSprite) {
+    if (hatSprite == nullptr) return;
+    
+    // Extract width and height from sprite data
+    uint8_t width = hatSprite[0];
+    uint8_t height = hatSprite[1];
+    
+    // Clear the area before drawing the hat
+    display.fillRect(x, y, width, height, GxEPD_WHITE);
+    
+    // Draw the hat sprite
+    display.drawBitmap(x, y, &hatSprite[2], width, height, GxEPD_BLACK);
+}
+
+bool drawEquippedHatOnSprite(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                            int16_t spriteX, int16_t spriteY,
+                            const AnimationFrame& frame) {
+    // Check if any hat is equipped
+    uint8_t equippedHat = getCurrentlyEquippedHat();
+    if (equippedHat == 0) {
+        return false; // No hat equipped, caller should handle sprite drawing
+    }
+    
+    // Get the hat sprite
+    const uint8_t* hatSprite = getHatSprite(equippedHat);
+    if (hatSprite == nullptr) {
+        return false; // Invalid hat sprite, caller should handle sprite drawing
+    }
+    
+    // Get hat dimensions
+    uint8_t hatWidth = hatSprite[0];
+    uint8_t hatHeight = hatSprite[1];
+    
+    // Calculate hat position on sprite head
+    int16_t hatX = spriteX + (frame.width - hatWidth) / 2 + 15;
+    int16_t hatY = spriteY - hatHeight + 10 + 12;
+    
+    // Calculate combined bounding box for sprite + hat
+    int16_t minX = min(spriteX, hatX);
+    int16_t minY = min(spriteY, hatY);
+    int16_t maxX = max(spriteX + frame.width, hatX + hatWidth);
+    int16_t maxY = max(spriteY + frame.height, hatY + hatHeight);
+    
+    // Clear the combined area for both sprite and hat
+    display.fillRect(minX, minY, maxX - minX, maxY - minY, GxEPD_WHITE);
+    
+    // Draw the sprite first
+    display.drawBitmap(spriteX, spriteY, &frame.data[2], frame.width, frame.height, GxEPD_BLACK);
+    
+    // Draw the hat on top
+    display.drawBitmap(hatX, hatY, &hatSprite[2], hatWidth, hatHeight, GxEPD_BLACK);
+    
+    return true; // Hat was equipped and drawn
 }
 
 void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,

@@ -62,7 +62,12 @@ void drawPetPommyPage(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display
 
     // Draw current animation frame
     const AnimationFrame& currentFrame = getCurrentFrame(petAnimation);
-    drawAnimationFrame(display, 0, 75, currentFrame);
+    
+    // Try to draw sprite with equipped hat (clears combined area and draws both)
+    if (!drawEquippedHatOnSprite(display, 0, 75, currentFrame)) {
+        // No hat equipped, draw sprite normally
+        drawAnimationFrame(display, 0, 75, currentFrame);
+    }
 
     display.displayWindow(0, 0, EPD_WIDTH, EPD_HEIGHT);
 } 

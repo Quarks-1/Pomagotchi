@@ -50,6 +50,14 @@ void drawAnimationFrame(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& displ
                        int16_t x, int16_t y,
                        const AnimationFrame& frame);
 
+void drawHatSprite(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                   int16_t x, int16_t y,
+                   const uint8_t* hatSprite);
+
+bool drawEquippedHatOnSprite(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
+                            int16_t spriteX, int16_t spriteY,
+                            const AnimationFrame& frame);
+
 void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
              int16_t x, int16_t y,
              int16_t width, int16_t height,
