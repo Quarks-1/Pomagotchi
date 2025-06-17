@@ -5,6 +5,7 @@
 #include "sleep_message.h"
 #include "ui/screens/screens.h"
 #include "pet/depletion.h"
+#include "activities/sunbathing.h"
 #include <esp_sleep.h>
 #include <GxEPD2_BW.h>
 
@@ -173,6 +174,9 @@ void checkSleepConditions() {
 void prepareForSleep() {
     Serial.println("Preparing for sleep - saving pet state...");
     
+    // Save sunbathing state before sleep
+    setSunbathingStateForSleep(isSunbathing);
+    
     // Switch to home screen first (this already includes display update)
     changePage(HOME_PAGE);
     
@@ -248,6 +252,19 @@ void SleepManager::handleWakeFromSleep() {
     unsigned long sleepDuration = millis() - sleepStartTime;
     Serial.print("Sleep duration (ms): ");
     Serial.println(sleepDuration);
+    
+    // Apply sunbathing progress if pet was sunbathing before sleep
+    applySunbathingDuringSleep(sleepDuration);
+    
+    // Reset active sunbathing mode since we're switching to home page on wake
+    // The accumulated progress is preserved in sunlightFillLevel
+    if (wasSunbathingBeforeSleep()) {
+        isSunbathing = false;
+        Serial.println("Reset active sunbathing mode after sleep (progress preserved)");
+    }
+    
+    // Reset the saved sunbathing state now that we've processed it
+    setSunbathingStateForSleep(false);
     
     // Apply depletion based on sleep duration
     if (xSemaphoreTake(petStateMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {

@@ -309,17 +309,50 @@ void drawIcon(GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT>& display,
             break;
         }
         case IconType::HEART: {
-            // Draw heart shape
+            // Draw happy face :)
             int centerX = x + width/2;
             int centerY = y + height/2;
-            int size = min(width, height) / 2;
-            for (int i = -size; i <= size; i++) {
-                for (int j = -size; j <= size; j++) {
-                    float x2 = (float)i/size;
-                    float y2 = (float)j/size;
-                    if (pow(x2*x2 + y2*y2 - 1, 3) - (x2*x2 * y2*y2*y2) <= 0) {
+            int radius = min(width, height) / 2 + 2; // Leave more room for thick lines
+            
+            // Draw face outline (circle) - thicker
+            for (int i = -radius; i <= radius; i++) {
+                for (int j = -radius; j <= radius; j++) {
+                    int distance = i*i + j*j;
+                    // Draw thick circle outline (2 pixels thick)
+                    if (distance >= (radius-2)*(radius-2) && distance <= radius*radius) {
                         display.drawPixel(centerX + i, centerY + j, GxEPD_BLACK);
                     }
+                }
+            }
+            
+            // Draw eyes (thicker dots)
+            int eyeOffset = radius / 3;
+            int eyeY = centerY - radius / 4;
+            // Left eye - 3x3 dot
+            for (int dx = 0; dx < 3; dx++) {
+                for (int dy = 0; dy < 3; dy++) {
+                    display.drawPixel(centerX - eyeOffset + dx, eyeY + dy, GxEPD_BLACK);
+                }
+            }
+            // Right eye - 3x3 dot
+            for (int dx = 0; dx < 3; dx++) {
+                for (int dy = 0; dy < 3; dy++) {
+                    display.drawPixel(centerX + eyeOffset + dx, eyeY + dy, GxEPD_BLACK);
+                }
+            }
+            
+            // Draw smile (curved upward, thicker)
+            int smileRadius = radius * 2 / 3 - 3;
+            int smileY = centerY + radius / 6; // Move smile up slightly
+            // Draw multiple passes for thickness and better curve
+            for (int thickness = 0; thickness < 2; thickness++) {
+                for (int angle = 45; angle <= 135; angle += 3) { // Better upward curve range
+                    float radians = angle * M_PI / 180.0;
+                    int smileX = centerX + cos(radians) * smileRadius;
+                    // More pronounced upward curve
+                    int currentSmileY = smileY + sin(radians) * smileRadius * 0.8;
+                    display.drawPixel(smileX, currentSmileY + thickness, GxEPD_BLACK);
+                    display.drawPixel(smileX + 1, currentSmileY + thickness, GxEPD_BLACK); // Make it thicker horizontally too
                 }
             }
             break;

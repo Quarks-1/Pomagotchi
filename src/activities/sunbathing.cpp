@@ -11,6 +11,9 @@ bool isSunbathing = false;
 uint8_t sunlightFillLevel = 0;
 constexpr unsigned long SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
 
+// Sleep-related sunbathing state
+static bool wasSunbathingBeforeSleepFlag = false;
+
 // Function to handle sunbathing
 void handleSunbathing(int8_t direction) {
     if (isSunbathing) {
@@ -80,4 +83,34 @@ void updateSunlightLevel() {
             }
         }
     }
+}
+
+// Sleep-related sunbathing functions
+void applySunbathingDuringSleep(unsigned long sleepDurationMs) {
+    if (wasSunbathingBeforeSleepFlag) {
+        // Calculate how many minutes passed during sleep
+        unsigned long sleepMinutes = sleepDurationMs / 60000; // Convert ms to minutes
+        
+        // Add sunlight progress for each minute of sleep (assuming in sunlight)
+        // This is simplified - in reality we'd need to check light sensor history
+        uint8_t progressToAdd = min((uint8_t)sleepMinutes, (uint8_t)(100 - sunlightFillLevel));
+        
+        if (progressToAdd > 0) {
+            sunlightFillLevel += progressToAdd;
+            Serial.print("Applied sunbathing progress during sleep: +");
+            Serial.print(progressToAdd);
+            Serial.print("%, new fill level: ");
+            Serial.println(sunlightFillLevel);
+        }
+    }
+}
+
+bool wasSunbathingBeforeSleep() {
+    return wasSunbathingBeforeSleepFlag;
+}
+
+void setSunbathingStateForSleep(bool wasSunbathing) {
+    wasSunbathingBeforeSleepFlag = wasSunbathing;
+    Serial.print("Sunbathing state saved for sleep: ");
+    Serial.println(wasSunbathing ? "was sunbathing" : "was not sunbathing");
 } 

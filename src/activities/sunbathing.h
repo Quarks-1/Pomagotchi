@@ -14,4 +14,9 @@ extern uint8_t sunlightFillLevel;
 void handleSunbathing(int8_t direction);
 void toggleSunbathing();
 uint8_t getSunlightFillLevel();
-void updateSunlightLevel(); 
+void updateSunlightLevel();
+
+// Sleep-related sunbathing functions
+void applySunbathingDuringSleep(unsigned long sleepDurationMs);
+bool wasSunbathingBeforeSleep();
+void setSunbathingStateForSleep(bool wasSunbathing); 
