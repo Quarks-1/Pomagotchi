@@ -273,7 +273,7 @@ bool saveStars(uint32_t stars) {
 }
 
 uint8_t loadSunlight() {
-    Serial.println("Loading sunlight value...");
+    // Serial.println("Loading sunlight value...");
     if (!LittleFS.exists(CONFIG_FILE)) {
         Serial.println("Config file not found, using default value 100");
         return 100;  // Default value
@@ -306,7 +306,7 @@ uint8_t loadSunlight() {
 }
 
 uint8_t loadThirst() {
-    Serial.println("Loading thirst value...");
+    // Serial.println("Loading thirst value...");
     if (!LittleFS.exists(CONFIG_FILE)) {
         Serial.println("Config file not found, using default value 100");
         return 100;  // Default value
@@ -339,7 +339,7 @@ uint8_t loadThirst() {
 }
 
 uint8_t loadPetStatus() {
-    Serial.println("Loading petStatus value...");
+    // Serial.println("Loading petStatus value...");
     if (!LittleFS.exists(CONFIG_FILE)) {
         Serial.println("Config file not found, using default value 0");
         return 0;  // Default value
@@ -366,13 +366,13 @@ uint8_t loadPetStatus() {
     }
 
     uint8_t value = doc["petStatus"].as<uint8_t>();
-    Serial.print("Loaded petStatus value: ");
+    // Serial.print("Loaded petStatus value: ");
     Serial.println(value);
     return value;
 }
 
 uint32_t loadStars() {
-    Serial.println("Loading stars value...");
+    // Serial.println("Loading stars value...");
     if (!LittleFS.exists(CONFIG_FILE)) {
         Serial.println("Config file not found, using default value 0");
         return 0;  // Default value
@@ -422,8 +422,8 @@ bool saveHatPurchased(uint8_t hatType, bool purchased) {
         return false;
     }
     
-    Serial.print("Saving hat purchased status: ");
-    Serial.print(hatKey);
+    // Serial.print("Saving hat purchased status: ");
+    // Serial.print(hatKey);
     Serial.print(" = ");
     Serial.println(purchased);
 
@@ -554,7 +554,7 @@ bool loadHatPurchased(uint8_t hatType) {
         return false;
     }
     
-    Serial.print("Loading hat purchased status: ");
+    // Serial.print("Loading hat purchased status: ");
     Serial.println(hatKey);
 
     if (!LittleFS.exists(CONFIG_FILE)) {
@@ -583,8 +583,8 @@ bool loadHatPurchased(uint8_t hatType) {
     }
 
     bool purchased = doc["hats"][hatKey]["purchased"].as<bool>();
-    Serial.print("Hat purchased status: ");
-    Serial.println(purchased);
+    // Serial.print("Hat purchased status: ");
+    // Serial.println(purchased);
     return purchased;
 }
 
@@ -595,8 +595,8 @@ bool loadHatWearing(uint8_t hatType) {
         return false;
     }
     
-    Serial.print("Loading hat wearing status: ");
-    Serial.println(hatKey);
+    // Serial.print("Loading hat wearing status: ");
+    // Serial.println(hatKey);
 
     if (!LittleFS.exists(CONFIG_FILE)) {
         Serial.println("Config file not found, hat not wearing");
@@ -624,7 +624,7 @@ bool loadHatWearing(uint8_t hatType) {
     }
 
     bool wearing = doc["hats"][hatKey]["wearing"].as<bool>();
-    Serial.print("Hat wearing status: ");
-    Serial.println(wearing);
+    // Serial.print("Hat wearing status: ");
+    // Serial.println(wearing);
     return wearing;
 } 

@@ -43,7 +43,7 @@ void Encoder::update() {
 }
 
 int8_t Encoder::getDelta() {
-    int32_t delta = last_position - encoder_position;
+    int32_t delta = (last_position - encoder_position)*-1;
     encoder_position = last_position;
     if (delta != 0) {
         Serial.print("Encoder turned: ");

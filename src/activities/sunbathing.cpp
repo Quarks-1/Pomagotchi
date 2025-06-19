@@ -10,6 +10,7 @@
 bool isSunbathing = false;
 uint8_t sunlightFillLevel = 0;
 constexpr unsigned long SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
+static unsigned long lastSunlightUpdate = 0;  // Track last update time
 
 // Sleep-related sunbathing state
 static bool wasSunbathingBeforeSleepFlag = false;
@@ -74,13 +75,17 @@ uint8_t getSunlightFillLevel() {
 // Function to update sunlight level based on sensor readings
 void updateSunlightLevel() {
     if (isSunbathing) {
-        if (isInSunlight()) {
-            // Increment sunlight level by 1% every minute when in sunlight
-            if (sunlightFillLevel < 100) {
-                sunlightFillLevel++;
-                Serial.print("Sunlight level increased to: ");
-                Serial.println(sunlightFillLevel);
+        unsigned long currentTime = millis();
+        if (currentTime - lastSunlightUpdate >= SUNLIGHT_UPDATE_INTERVAL) {
+            if (isInSunlight()) {
+                // Increment sunlight level by 1% every minute when in sunlight
+                if (sunlightFillLevel < 100) {
+                    sunlightFillLevel++;
+                    Serial.print("Sunlight level increased to: ");
+                    Serial.println(sunlightFillLevel);
+                }
             }
+            lastSunlightUpdate = currentTime;
         }
     }
 }

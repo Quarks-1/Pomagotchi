@@ -14,7 +14,7 @@ static uint16_t lastProximityValue = 0;
 static bool objectDetected = false;
 static unsigned long pettingStartTime = 0;
 static unsigned long lastPetTime = 0;
-static uint16_t PROXIMITY_THRESHOLD = 4000;  // Threshold for object detection (adjustable)
+static uint16_t PROXIMITY_THRESHOLD = 18000;  // Threshold for object detection (adjustable)
 constexpr unsigned long PET_COOLDOWN = 1000;    // 1 second cooldown between pets
 constexpr unsigned long PET_TIMEOUT = 2000;     // 2 seconds max for a petting gesture
 
