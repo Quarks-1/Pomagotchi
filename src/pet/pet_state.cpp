@@ -55,8 +55,10 @@ void checkAndGrantStars() {
         if (sunlight > 0 && thirst > 0 && petStatus > 0) {
             Serial.println("Adding star");
             grantStar();
+            // Only reset timer when star is actually granted
+            lastStarCheckTime = currentTime;
         }
-        lastStarCheckTime = currentTime;
+        // If stats are not all > 0, don't reset timer - keep checking until they are
     }
 }
 
@@ -138,4 +140,15 @@ void resetPetStatus() {
         xSemaphoreGive(petStateMutex);
     }
     Serial.println("Pet status reset to 0 - bar is now empty");
+}
+
+// Function to adjust star timer after sleep (called from sleep manager)
+void adjustStarTimerAfterSleep(unsigned long sleepDurationMs) {
+    // Advance the star check timer by the amount of sleep time
+    // This ensures sleep time counts toward the daily star interval
+    lastStarCheckTime += sleepDurationMs;
+    
+    Serial.print("Adjusted star timer after sleep by ");
+    Serial.print(sleepDurationMs / 1000);
+    Serial.println(" seconds");
 } 

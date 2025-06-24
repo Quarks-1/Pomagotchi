@@ -248,8 +248,16 @@ void SleepManager::handleWakeFromSleep() {
             break;
     }
     
-    // Calculate sleep duration
-    unsigned long sleepDuration = millis() - sleepStartTime;
+    // Calculate sleep duration (handle potential millis() rollover)
+    unsigned long currentTime = millis();
+    unsigned long sleepDuration;
+    if (currentTime >= sleepStartTime) {
+        sleepDuration = currentTime - sleepStartTime;
+    } else {
+        // Handle millis() rollover (happens every ~49.7 days)
+        sleepDuration = (ULONG_MAX - sleepStartTime) + currentTime + 1;
+    }
+    
     Serial.print("Sleep duration (ms): ");
     Serial.println(sleepDuration);
     
@@ -296,6 +304,9 @@ void SleepManager::handleWakeFromSleep() {
         
         // Update last update time to current time
         lastUpdateTime = millis();
+        
+        // Adjust star timer to account for sleep time
+        adjustStarTimerAfterSleep(sleepDuration);
         
         xSemaphoreGive(petStateMutex);
         

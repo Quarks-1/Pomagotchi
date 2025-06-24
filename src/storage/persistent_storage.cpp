@@ -27,7 +27,7 @@ bool initializeStorage() {
     return true;
 }
 
-bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint8_t stars) {
+bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint32_t stars) {
     Serial.print("Saving values - Sunlight: ");
     Serial.print(sunlight);
     Serial.print(", Thirst: ");

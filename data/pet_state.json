@@ -2,7 +2,8 @@
     "sunlight": 100,
     "thirst": 100,
     "petStatus": 10,
-    "stars": 0,
+    "stars": 3,
+    "lastStarCheckTime": 0,
     "hats": {
         "topHat": {
             "purchased": false,

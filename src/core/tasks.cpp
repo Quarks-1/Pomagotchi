@@ -20,7 +20,7 @@ extern bool isLightSensorEnabled;
 extern bool isBatteryMonitorEnabled;
 extern void handleSerialInput(char c);
 extern void updateDisplay();
-extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint8_t stars);
+extern bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint32_t stars);
 
 // Task handles
 TaskHandle_t inputTaskHandle = NULL;
@@ -208,7 +208,7 @@ void storageTask(void* parameter) {
     uint8_t currentSunlight = 0;
     uint8_t currentThirst = 0;
     uint8_t currentPetStatus = 0;
-    uint8_t currentStars = 0;
+    uint32_t currentStars = 0;
     
     while (1) {
         shouldSave = false;

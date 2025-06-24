@@ -28,4 +28,5 @@ void resetPetStatus();
 // Star reward functions
 void checkAndGrantStars();
 void grantStar();
-uint32_t getStars(); 
+uint32_t getStars();
+void adjustStarTimerAfterSleep(unsigned long sleepDurationMs); 
