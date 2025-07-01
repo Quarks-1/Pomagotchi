@@ -9,6 +9,11 @@ extern uint8_t petStatus;  // 0-10 pets
 extern uint32_t stars;
 extern unsigned long lastUpdateTime;
 
+// Logging flag variables for star rewards
+extern uint8_t waterLoggedFlag;    // 1 if water has been logged since last star
+extern uint8_t sunlightLoggedFlag; // 1 if sunlight has been logged since last star  
+extern uint8_t petLoggedFlag;      // 1 if petting has been logged since last star
+
 // Function declarations
 void updatePetState();
 void initializePetState();
@@ -22,6 +27,9 @@ void logWater(uint8_t amount);
 // Log pet interactions and update pet status (0-10)
 void logPet(uint8_t amount);
 
+// Log sunlight activity (called from sunbathing)
+void logSunlight();
+
 // Reset pet status to 0
 void resetPetStatus();
 
@@ -29,4 +37,8 @@ void resetPetStatus();
 void checkAndGrantStars();
 void grantStar();
 uint32_t getStars();
-void adjustStarTimerAfterSleep(unsigned long sleepDurationMs); 
+void adjustStarTimerAfterSleep(unsigned long sleepDurationMs);
+
+// Logging flag functions
+void checkAndRewardCompleteLogging();
+void resetLoggingFlags(); 

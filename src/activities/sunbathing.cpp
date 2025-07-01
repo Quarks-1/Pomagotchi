@@ -36,6 +36,12 @@ void toggleSunbathing() {
         Serial.print("Exiting sunbathing mode. Final fill level: ");
         Serial.println(sunlightFillLevel);
         
+        // Only log sunlight if we actually gained some sunlight
+        if (sunlightFillLevel > 0) {
+            // Call the new logging function to set the flag
+            logSunlight();
+        }
+        
         // Add the fill level to current sunlight level
         int16_t newSunlight = sunlight + sunlightFillLevel;
         if (newSunlight > 100) {

@@ -14,6 +14,12 @@ uint8_t petStatus = 0;   // 0-10 pets
 uint32_t stars = 0;      // Star rewards
 unsigned long lastUpdateTime = 0;
 unsigned long lastStarCheckTime = 0;
+
+// Logging flag variables for star rewards
+uint8_t waterLoggedFlag = 0;    // 1 if water has been logged since last star
+uint8_t sunlightLoggedFlag = 0; // 1 if sunlight has been logged since last star  
+uint8_t petLoggedFlag = 0;      // 1 if petting has been logged since last star
+
 constexpr unsigned long NORMAL_SUNLIGHT_UPDATE_INTERVAL = 60000; // Update every minute
 constexpr unsigned long DEBUG_SUNLIGHT_UPDATE_INTERVAL = 100;   // Update every second in debug mode
 constexpr unsigned long NORMAL_STAR_CHECK_INTERVAL = 86400000;  // Check once per day (24 hours)
@@ -25,6 +31,11 @@ void initializePetState() {
     thirst = loadThirst();
     petStatus = loadPetStatus();
     stars = loadStars();
+    
+    // Load logging flags
+    waterLoggedFlag = loadWaterLoggedFlag();
+    sunlightLoggedFlag = loadSunlightLoggedFlag();
+    petLoggedFlag = loadPetLoggedFlag();
     
     // If values are 0 (uninitialized storage), set defaults
     if (sunlight == 0) sunlight = 100;
@@ -60,6 +71,9 @@ void checkAndGrantStars() {
         }
         // If stats are not all > 0, don't reset timer - keep checking until they are
     }
+    
+    // Also check for complete logging reward (independent of daily timer)
+    checkAndRewardCompleteLogging();
 }
 
 void grantStar() {
@@ -90,6 +104,13 @@ void logWater(uint8_t amount) {
             thirst = newThirst;
         }
         
+        // Set water logged flag
+        if (!waterLoggedFlag) {
+            waterLoggedFlag = 1;
+            saveWaterLoggedFlag(waterLoggedFlag);
+            Serial.println("Water logged flag set!");
+        }
+        
         // Send storage event
         StorageEvent event = {StorageEvent::SAVE_THIRST, thirst};
         xQueueSend(storageQueue, &event, 0);
@@ -118,6 +139,13 @@ void logPet(uint8_t amount) {
             petStatus = newPetStatus;
         }
         
+        // Set pet logged flag
+        if (!petLoggedFlag) {
+            petLoggedFlag = 1;
+            savePetLoggedFlag(petLoggedFlag);
+            Serial.println("Pet logged flag set!");
+        }
+        
         // Send storage event to save petStatus
         StorageEvent event = {StorageEvent::SAVE_PET_STATUS, petStatus};
         xQueueSend(storageQueue, &event, 0);
@@ -127,6 +155,17 @@ void logPet(uint8_t amount) {
     
     Serial.print("New pet status: ");
     Serial.println(petStatus);
+}
+
+void logSunlight() {
+    Serial.println("Logging sunlight activity");
+    
+    // Set sunlight logged flag
+    if (!sunlightLoggedFlag) {
+        sunlightLoggedFlag = 1;
+        saveSunlightLoggedFlag(sunlightLoggedFlag);
+        Serial.println("Sunlight logged flag set!");
+    }
 }
 
 void resetPetStatus() {
@@ -151,4 +190,24 @@ void adjustStarTimerAfterSleep(unsigned long sleepDurationMs) {
     Serial.print("Adjusted star timer after sleep by ");
     Serial.print(sleepDurationMs / 1000);
     Serial.println(" seconds");
+}
+
+// Check if all three activities have been logged and reward with a star
+void checkAndRewardCompleteLogging() {
+    if (waterLoggedFlag && sunlightLoggedFlag && petLoggedFlag) {
+        Serial.println("All three activities logged! Granting bonus star!");
+        grantStar();
+        resetLoggingFlags();
+    }
+}
+
+// Reset all logging flags to 0 and save them
+void resetLoggingFlags() {
+    waterLoggedFlag = 0;
+    sunlightLoggedFlag = 0;
+    petLoggedFlag = 0;
+    
+    // Save all flags to storage
+    saveLoggingFlags(waterLoggedFlag, sunlightLoggedFlag, petLoggedFlag);
+    Serial.println("All logging flags reset to 0");
 } 

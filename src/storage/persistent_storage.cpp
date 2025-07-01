@@ -58,6 +58,17 @@ bool saveValues(uint8_t sunlight, uint8_t thirst, uint8_t petStatus, uint32_t st
     doc["petStatus"] = petStatus;
     doc["stars"] = stars;
     
+    // Ensure logging flags exist with defaults if not already present
+    if (!doc.containsKey("waterLoggedFlag")) {
+        doc["waterLoggedFlag"] = 0;
+    }
+    if (!doc.containsKey("sunlightLoggedFlag")) {
+        doc["sunlightLoggedFlag"] = 0;
+    }
+    if (!doc.containsKey("petLoggedFlag")) {
+        doc["petLoggedFlag"] = 0;
+    }
+    
     // Ensure hats structure exists with defaults if not already present
     if (!doc.containsKey("hats")) {
         JsonObject hats = doc.createNestedObject("hats");
@@ -627,4 +638,248 @@ bool loadHatWearing(uint8_t hatType) {
     // Serial.print("Hat wearing status: ");
     // Serial.println(wearing);
     return wearing;
+}
+
+// Logging flag functions
+bool saveLoggingFlags(uint8_t waterLogged, uint8_t sunlightLogged, uint8_t petLogged) {
+    Serial.print("Saving logging flags - Water: ");
+    Serial.print(waterLogged);
+    Serial.print(", Sunlight: ");
+    Serial.print(sunlightLogged);
+    Serial.print(", Pet: ");
+    Serial.println(petLogged);
+
+    StaticJsonDocument<512> doc;
+    
+    // Load existing JSON to preserve all existing data
+    if (LittleFS.exists(CONFIG_FILE)) {
+        File file = LittleFS.open(CONFIG_FILE, "r");
+        if (file) {
+            DeserializationError error = deserializeJson(doc, file);
+            file.close();
+            if (error) {
+                Serial.println("Failed to parse existing config file for logging flags save");
+                return false;
+            }
+        } else {
+            Serial.println("Failed to open config file for reading logging flags");
+            return false;
+        }
+    } else {
+        Serial.println("Config file not found for logging flags save");
+        return false;
+    }
+    
+    // Update the logging flag values
+    doc["waterLoggedFlag"] = waterLogged;
+    doc["sunlightLoggedFlag"] = sunlightLogged;
+    doc["petLoggedFlag"] = petLogged;
+
+    File file = LittleFS.open(CONFIG_FILE, "w");
+    if (!file) {
+        Serial.println("Failed to open config file for writing");
+        return false;
+    }
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println("Failed to write config file");
+        file.close();
+        return false;
+    }
+
+    file.close();
+    Serial.println("Successfully saved logging flags");
+    return true;
+}
+
+bool saveWaterLoggedFlag(uint8_t value) {
+    StaticJsonDocument<512> doc;
+    
+    // Load existing JSON to preserve all existing data
+    if (LittleFS.exists(CONFIG_FILE)) {
+        File file = LittleFS.open(CONFIG_FILE, "r");
+        if (file) {
+            DeserializationError error = deserializeJson(doc, file);
+            file.close();
+            if (error) {
+                Serial.println("Failed to parse existing config file for water flag save");
+                return false;
+            }
+        }
+    }
+    
+    doc["waterLoggedFlag"] = value;
+
+    File file = LittleFS.open(CONFIG_FILE, "w");
+    if (!file) {
+        Serial.println("Failed to open config file for writing");
+        return false;
+    }
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println("Failed to write config file");
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
+}
+
+bool saveSunlightLoggedFlag(uint8_t value) {
+    StaticJsonDocument<512> doc;
+    
+    // Load existing JSON to preserve all existing data
+    if (LittleFS.exists(CONFIG_FILE)) {
+        File file = LittleFS.open(CONFIG_FILE, "r");
+        if (file) {
+            DeserializationError error = deserializeJson(doc, file);
+            file.close();
+            if (error) {
+                Serial.println("Failed to parse existing config file for sunlight flag save");
+                return false;
+            }
+        }
+    }
+    
+    doc["sunlightLoggedFlag"] = value;
+
+    File file = LittleFS.open(CONFIG_FILE, "w");
+    if (!file) {
+        Serial.println("Failed to open config file for writing");
+        return false;
+    }
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println("Failed to write config file");
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
+}
+
+bool savePetLoggedFlag(uint8_t value) {
+    StaticJsonDocument<512> doc;
+    
+    // Load existing JSON to preserve all existing data
+    if (LittleFS.exists(CONFIG_FILE)) {
+        File file = LittleFS.open(CONFIG_FILE, "r");
+        if (file) {
+            DeserializationError error = deserializeJson(doc, file);
+            file.close();
+            if (error) {
+                Serial.println("Failed to parse existing config file for pet flag save");
+                return false;
+            }
+        }
+    }
+    
+    doc["petLoggedFlag"] = value;
+
+    File file = LittleFS.open(CONFIG_FILE, "w");
+    if (!file) {
+        Serial.println("Failed to open config file for writing");
+        return false;
+    }
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println("Failed to write config file");
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
+}
+
+uint8_t loadWaterLoggedFlag() {
+    if (!LittleFS.exists(CONFIG_FILE)) {
+        Serial.println("Config file not found, using default water flag value 0");
+        return 0;  // Default value
+    }
+
+    File file = LittleFS.open(CONFIG_FILE, "r");
+    if (!file) {
+        Serial.println("Failed to open config file for reading");
+        return 0;
+    }
+
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, file);
+    file.close();
+
+    if (error) {
+        Serial.println("Failed to parse config file");
+        return 0;
+    }
+
+    if (!doc.containsKey("waterLoggedFlag")) {
+        Serial.println("Water logged flag not found in config, using default value 0");
+        return 0;
+    }
+
+    uint8_t value = doc["waterLoggedFlag"].as<uint8_t>();
+    return value;
+}
+
+uint8_t loadSunlightLoggedFlag() {
+    if (!LittleFS.exists(CONFIG_FILE)) {
+        Serial.println("Config file not found, using default sunlight flag value 0");
+        return 0;  // Default value
+    }
+
+    File file = LittleFS.open(CONFIG_FILE, "r");
+    if (!file) {
+        Serial.println("Failed to open config file for reading");
+        return 0;
+    }
+
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, file);
+    file.close();
+
+    if (error) {
+        Serial.println("Failed to parse config file");
+        return 0;
+    }
+
+    if (!doc.containsKey("sunlightLoggedFlag")) {
+        Serial.println("Sunlight logged flag not found in config, using default value 0");
+        return 0;
+    }
+
+    uint8_t value = doc["sunlightLoggedFlag"].as<uint8_t>();
+    return value;
+}
+
+uint8_t loadPetLoggedFlag() {
+    if (!LittleFS.exists(CONFIG_FILE)) {
+        Serial.println("Config file not found, using default pet flag value 0");
+        return 0;  // Default value
+    }
+
+    File file = LittleFS.open(CONFIG_FILE, "r");
+    if (!file) {
+        Serial.println("Failed to open config file for reading");
+        return 0;
+    }
+
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, file);
+    file.close();
+
+    if (error) {
+        Serial.println("Failed to parse config file");
+        return 0;
+    }
+
+    if (!doc.containsKey("petLoggedFlag")) {
+        Serial.println("Pet logged flag not found in config, using default value 0");
+        return 0;
+    }
+
+    uint8_t value = doc["petLoggedFlag"].as<uint8_t>();
+    return value;
 } 

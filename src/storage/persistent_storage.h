@@ -20,6 +20,15 @@ uint8_t loadPetStatus();
 bool saveStars(uint32_t stars);
 uint32_t loadStars();
 
+// Logging flag functions
+bool saveLoggingFlags(uint8_t waterLogged, uint8_t sunlightLogged, uint8_t petLogged);
+bool saveWaterLoggedFlag(uint8_t value);
+bool saveSunlightLoggedFlag(uint8_t value);
+bool savePetLoggedFlag(uint8_t value);
+uint8_t loadWaterLoggedFlag();
+uint8_t loadSunlightLoggedFlag();
+uint8_t loadPetLoggedFlag();
+
 // Hat functions
 bool saveHatPurchased(uint8_t hatType, bool purchased);
 bool saveHatWearing(uint8_t hatType, bool wearing);

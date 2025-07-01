@@ -2,8 +2,11 @@
     "sunlight": 100,
     "thirst": 100,
     "petStatus": 10,
-    "stars": 3,
+    "stars": 10,
     "lastStarCheckTime": 0,
+    "waterLoggedFlag": 0,
+    "sunlightLoggedFlag": 0,
+    "petLoggedFlag": 0,
     "hats": {
         "topHat": {
             "purchased": false,
