@@ -8,7 +8,7 @@ A physical Tamagotchi-style virtual pet on ESP32 with a 1.54" e-ink display.
 
 ## Overview
 
-Pomagotchi is firmware for a handheld device that tracks the wellbeing of **Pommy**, a pixel-art cat. You log real-world activities — drinking water, getting sunlight, and petting — to keep Pommy's stats healthy. Earn stars for consistent care, then spend them on cosmetic hats in the in-game store.
+Pomagotchi is firmware for a handheld device that tracks the wellbeing of **Pommy**, a pixel-art pomeranian. You log real-world activities — drinking water, getting sunlight, and petting — to keep Pommy's stats healthy. Earn stars for consistent care, then spend them on cosmetic hats in the in-game store.
 
 Stats deplete over real time (~5 days from full to empty for sunlight and thirst). After 5 minutes of inactivity the device enters light sleep to save power; depletion continues while asleep, and sunbathing can still progress.
 
@@ -217,16 +217,3 @@ The storage task saves every 30 seconds and on stat-changing events (activity lo
 ## Tech Stack
 
 C++ · Arduino framework · PlatformIO · FreeRTOS · GxEPD2 · ArduinoJson · LittleFS
-
-## Resume & Application Notes
-
-For reference when linking this repo on a resume or job application:
-
-**Resume bullets:**
-
-- Designed and built firmware for a physical Tamagotchi-style device on ESP32 (FreeRTOS, e-ink UI, I2C sensors), with a modular C++ architecture across 8 domain modules (`core`, `pet`, `ui`, `hardware`, `storage`, `activities`, `system`, `animation`)
-- Built developer ergonomics into the firmware: a 25+ command serial debug console for headless navigation/testing, a `debug` mode that compresses day-scale timers to seconds, and a one-shot `upload_all.sh` flash pipeline (firmware + LittleFS filesystem)
-
-**"Project you're proud of" note:**
-
-> Pomagotchi is a physical Tamagotchi I built for someone close to me, but I approached it like a product: modular firmware, persistent state, and a serial CLI so I could iterate without constantly interacting with hardware. Debug mode turns multi-day game loops into second-scale tests. The project let me apply the same instincts I use at work — tightening feedback loops and making development feel fast — even on a constrained embedded target.
