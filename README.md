@@ -1,6 +1,6 @@
 # Pomagotchi
 
-A physical Tamagotchi-style virtual pet on ESP32 with a 1.54" e-ink display.
+A physical Tamagotchi-style virtual pet on ESP32 with a 1.54" e-ink display. Built as a gift to fit the needs of my partner, with thoughtful and intentional UI/UX choices best suited for her.
 
 ![Pomagotchi device](docs/images/device.png)
 
