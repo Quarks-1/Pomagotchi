@@ -1,219 +1,172 @@
 # Pomagotchi
 
-A physical Tamagotchi-style virtual pet on ESP32 with a 1.54" e-ink display.
+A physical Tamagotchi-style wellness buddy — a handheld device I built for my significant other to make hydration, sunlight, and affection habits tangible through **Pommy**, a pixel-art pomeranian.
 
 ![Pomagotchi device](docs/images/device.png)
 
 *Custom 3D-printed enclosure, 1.54" e-ink display, Seesaw rotary encoder, and status LED.*
 
-## Overview
+**Problem:** It is easy to forget small wellness habits, and phone apps feel abstract — they compete for attention and rarely create a lasting emotional cue.
 
-Pomagotchi is firmware for a handheld device that tracks the wellbeing of **Pommy**, a pixel-art pomeranian. You log real-world activities — drinking water, getting sunlight, and petting — to keep Pommy's stats healthy. Earn stars for consistent care, then spend them on cosmetic hats in the in-game store.
+**Solution:** A dedicated bedside object where real-world care maps to Pommy’s stats over **real days** — water, sunlight, and affection — with a gentle loop of stars and cosmetic rewards.
 
-Stats deplete over real time (~5 days from full to empty for sunlight and thirst). After 5 minutes of inactivity the device enters light sleep to save power; depletion continues while asleep, and sunbathing can still progress.
+**Proof:** [Pomagotchi demos on Imgur](https://imgur.com/a/LIptVTo) (UI, activities, gameplay). My significant other uses it **daily**; I have no usage analytics — impact is qualitative.
 
-**Photos & demos:** [Pomagotchi vids on Imgur](https://imgur.com/a/LIptVTo) — GIFs and videos of UI navigation, activities, and gameplay.
+**Why this matters (PM lens):**
 
-## Features
+- **Habit loop** — stats decay → log activities → earn stars → spend on hats → repeat.
+- **0→1 product** — I scoped, designed, and shipped the hardware enclosure and ESP32 firmware solo.
+- **Constraint-driven design** — e-ink UI, light sleep, optional sensors, and flash persistence that survives sleep.
 
-- **5-screen ring UI** — Home → Water → Sun → Pet → Store, navigated via rotary encoder
+**Contents:** [Context](#context-and-primary-user) · [Problem](#problem) · [Why not an app](#why-not-an-app) · [Product spec](#product-specification) · [Walkthrough](#experience-walkthrough) · [Rewards](#reward-economy) · [Decisions](#key-product-decisions) · [Build journey](#build-journey) · [Impact](#impact) · [Scaled metrics](#if-this-were-scaled) · [Engineering map](#how-product-maps-to-engineering) · [Quick start](#quick-start) · [Engineering deep dive](docs/ENGINEERING.md)
+
+## Context and primary user
+
+I started Pomagotchi to give my **significant other** a “wellness buddy” — something delightful to check in on, not another checklist app. She is the **primary user**: the stats, timing, and rewards were tuned for her routines around hydration, getting outside, and moments of affection with Pommy.
+
+I owned product definition and implementation end to end: enclosure, electronics integration, firmware, and iteration from prototype to **daily driver**.
+
+## Problem
+
+The job to be done: **help build consistent wellness habits with something enjoyable to interact with.**
+
+Phone-based wellness tools often fail the emotional and ambient test — they live behind a lock screen, notify at the wrong times, and do not create a persistent, shared character in the physical space. I wanted stakes that feel caring, not punitive, and feedback that fits on a nightstand or desk without demanding constant attention.
+
+## Why not an app
+
+**Insight:** For this user, habit change needed a **single-purpose, tactile artifact** — not another icon in a folder.
+
+| Wellness apps | Pomagotchi |
+|---------------|------------|
+| Compete with every other notification | Present on the desk; no notification spam |
+| Abstract progress bars | Pommy’s face and animations reflect care |
+| Easy to ignore after week one | Physical object + slow stat decay creates gentle accountability |
+| One-size-fits-all UX | Built for one primary user’s three habits |
+
+I traded flexibility (any phone, any habit) for **focus** (three behaviors, one character, one device) and **craft** (e-ink, encoder, sensors).
+
+## Product specification
+
+### Goals
+
+- Make hydration, sunlight, and affection **visible and rewarding** through Pommy’s stats.
+- Create **gentle urgency** with real-time decay (multi-day sun/thirst, faster affection decay).
+- Reinforce consistency: **daily star** when all stats stay above zero; **bonus star** when all three activities are logged.
+- Sustain engagement via **stars → cosmetic hats** (progression through care, not monetization).
+
+### Primary user
+
+My significant other — daily use, qualitative feedback (see [Impact](#impact)).
+
+### Functional requirements (shipped)
+
+- **5-screen ring UI** — Home → Water → Sun → Pet → Store, via rotary encoder
 - **Three stats** — Sunlight and thirst (0–100), affection (0–10)
-- **Activity logging** — Water intake via encoder meter; sunlight via ambient light sensor; petting via proximity detection
-- **Star economy** — Daily star when all stats stay above zero; bonus star for logging all three activities in a cycle
-- **Cosmetic store** — Four purchasable/equippable hats (Tophat 10★, Cowboy 25★, Party 50★, Star 100★)
-- **Light sleep** — 5-minute inactivity timeout; wakes on encoder interrupt
-- **JSON persistence** — Save state on LittleFS with 30s periodic saves and event-driven writes
-- **Sprite animations** — Walk, jump, sniff, and other sequences with hat overlay rendering
-- **Serial debug console** — 25+ commands for headless navigation, stat injection, and observability
-- **Debug mode** — Compresses day-scale timers to seconds for fast iteration
+- **Activity logging** — Water meter; sun session; petting via proximity
+- **Star economy** — Daily maintenance star + bonus for logging all three activities
+- **Cosmetic store** — Four hats, purchasable and equippable
+- **Light sleep** — Inactivity timeout; wake on encoder
+- **JSON persistence** — LittleFS with periodic and event-driven saves
+- **Sprite animations** — Walk, jump, sniff, etc., with hat overlays
 
-## Hardware
+### Non-goals
 
-| Component | Details |
-|-----------|---------|
-| MCU | [Adafruit Feather ESP32 V2](https://www.adafruit.com/product/5400) |
-| Enclosure | Custom yellow 3D-printed case |
-| Display | 1.54" 200×200 e-ink (`GxEPD2_154_D67`), SPI pins 12–15 |
-| Input | Adafruit Seesaw rotary encoder (I2C) |
-| Sensors | VCNL4020 proximity/ambient light, LC709203F fuel gauge (STEMMA QT, SDA=23 / SCL=22) |
-| Storage | 2MB LittleFS |
+- Multi-user accounts or cloud sync
+- Mobile companion app
+- Medical or clinical claims
+- Social sharing or leaderboards
 
-**E-ink pin map** (from `src/core/main.cpp`):
+### Design targets
 
-| Signal | GPIO |
-|--------|------|
-| RST | 13 |
-| DC | 12 |
-| CS | 14 |
-| BUSY | 15 |
-| MOSI / SCK | 35 / 36 (default SPI) |
+| Stat / behavior | Target |
+|-----------------|--------|
+| Sunlight | 0–100; −1 every **1.2 h** (~**5 days** from full to empty) |
+| Thirst | 0–100; same decay as sunlight |
+| Affection | 0–10; −1 every **2 h** (~**20 h** from full to empty) |
+| Daily star | Every **24 h** if sunlight, thirst, and affection are **all > 0**; check interval resets only when a star is granted |
+| Bonus star | Grant when water, sun, and pet **logging flags** are all set; flags reset after grant |
+| Sleep | **5 min** inactivity → light sleep; depletion continues while asleep |
+| Hats | Tophat **10★**, Cowboy **25★**, Party **50★**, Star **100★** |
+| Sensors | VCNL4020 / fuel gauge optional — firmware continues if missing at boot |
 
-Optional sensors degrade gracefully — if the light sensor or battery monitor is not detected at boot, the firmware continues without them.
+## Experience walkthrough
 
-## Architecture
+Navigation is a fixed ring: **Home → Water → Sun → Pet → Store**, then back to Home.
 
-Five FreeRTOS tasks coordinate input, display, game logic, persistence, and sleep management. Shared state is protected by `petStateMutex` and `displayMutex`; tasks communicate via queues.
+| Screen | Real habit | Interaction |
+|--------|------------|-------------|
+| **Home** | Check Pommy’s overall state | Status at a glance; jump to any activity |
+| **Water** | Hydration | Enter logging mode, fill a meter with the encoder, exit to apply thirst |
+| **Sun** | Sunlight / time outside | Fill via encoder; ambient light can advance progress while sunbathing when the sensor is present |
+| **Pet** | Affection / touch | Proximity detects a petting gesture; encoder adjusts affection only in debug mode |
+| **Store** | Long-term motivation | Spend stars on hats; equip favorites on Pommy |
+
+## Reward economy
+
+**Daily star (maintenance):** Once per 24 hours, if sunlight, thirst, and affection are all above zero, Pommy earns a star. If any stat is at zero, the device keeps checking on the same interval until stats recover — the timer does not reset until a star is actually awarded.
+
+**Bonus star (completion):** Logging water, sun, and pet each sets a flag. When all three flags are set, Pommy earns an extra star and the flags reset.
+
+**Store:** Stars unlock cosmetics only — Tophat (10★), Cowboy (25★), Party (50★), Star (100★) — to reward consistency without changing core difficulty.
 
 ```mermaid
-flowchart TB
-    subgraph tasks [FreeRTOS Tasks]
-        inputTask[InputTask]
-        displayTask[DisplayTask]
-        storageTask[StorageTask]
-        logicTask[LogicTask]
-        sleepTask[SleepTask]
-    end
-    subgraph hw [Hardware]
-        encoder[Rotary Encoder]
-        eink[E-Ink Display]
-        sensors[I2C Sensors]
-    end
-    subgraph persist [Persistence]
-        littlefs[LittleFS pet_state.json]
-    end
-    encoder --> inputTask
-    sensors --> inputTask
-    inputTask --> displayTask
-    inputTask --> logicTask
-    logicTask --> storageTask
-    storageTask --> littlefs
-    displayTask --> eink
-    sleepTask --> logicTask
+flowchart LR
+  realLife[Real habits water sun affection]
+  log[Log via encoder and sensors]
+  stats[Stats sunlight thirst affection]
+  decay[Time decay including sleep]
+  stars[Stars daily plus activity bonus]
+  store[Hats cosmetics]
+  realLife --> log --> stats
+  stats --> decay
+  stats --> stars --> store
+  store --> realLife
 ```
 
-| Task | Role |
-|------|------|
-| `InputTask` | Encoder polling, serial input, sensor reads |
-| `DisplayTask` | Input dispatch and 100ms display refresh |
-| `StorageTask` | Async LittleFS writes via queue |
-| `LogicTask` | Stat depletion, sunbathing, petting, star grants |
-| `SleepTask` | Inactivity detection and light sleep entry |
+## Key product decisions
 
-See [`src/core/tasks.cpp`](src/core/tasks.cpp) for task creation, queue sizes, and stack configuration.
+1. **Physical device vs wellness app** — Dedicated object for emotional attachment and ambient presence → custom enclosure + ESP32 firmware ([Engineering](docs/ENGINEERING.md)).
+2. **Real-time decay over days** — Stakes that match life pace, not hourly punishment → depletion intervals in [`src/pet/depletion.h`](src/pet/depletion.h).
+3. **Dual reward system** — Separate “keep Pommy healthy” from “complete all three habits today” → [`src/pet/pet_state.cpp`](src/pet/pet_state.cpp) (`checkAndGrantStars`, `checkAndRewardCompleteLogging`).
+4. **Sensor-backed activities where possible** — Reduce friction vs pure self-report → sun progress from ambient light; petting from proximity ([`src/activities/sunbathing.cpp`](src/activities/sunbathing.cpp), [`src/pet/pet_pommy.cpp`](src/pet/pet_pommy.cpp)).
+5. **Power vs continuity** — Battery life without pausing the care clock → light sleep after 5 minutes, depletion applied across sleep ([`src/system/sleep_manager.cpp`](src/system/sleep_manager.cpp)).
 
-## Project Structure
+## Build journey
 
-```
-src/core/       main.cpp, FreeRTOS task orchestration
-src/pet/        state, depletion, petting logic
-src/activities/ water logging, sunbathing, store purchases
-src/ui/         cursor, components, 5 screen renderers
-src/hardware/   encoder, light sensor, battery monitor
-src/storage/    LittleFS JSON persistence
-src/system/     sleep manager
-src/animation/  sprite sequences
-src/assets/     embedded sprites + convert_sprites.py
-data/           default pet_state.json (flashed to LittleFS)
-scripts/        upload_all.sh
-docs/images/    README media
-```
+I went from a simple intent — a wellness buddy for my significant other — through a custom yellow enclosure and Feather ESP32 stack, then firmware for the five-screen loop, persistence, and sleep. Pomagotchi is now her daily driver; the serial debug console and compressed debug timers were how I validated multi-day game loops on the bench without waiting a week per iteration (details in [Engineering](docs/ENGINEERING.md)).
 
-## Getting Started
+## Impact
 
-### Prerequisites
+She uses Pomagotchi every day. I did not instrument analytics; the outcome I care about is whether the device supports her habits and feels worth picking up.
 
-- [PlatformIO](https://platformio.org/install)
-- Adafruit Feather ESP32 V2 with the hardware listed above
-- USB cable
+> **[QUOTE PENDING]** — Significant other's feedback on what Pomagotchi changed for their routine. *(Replace before sharing externally.)*
 
-### Build and flash
+> **[QUOTE PENDING]** — Significant other's feedback on what they enjoy most about caring for Pommy. *(Replace before sharing externally.)*
+
+## If this were scaled
+
+*Hypothetical metrics only — not measured on this single-user build.*
+
+- **Daily engagement rate** — % of days the primary user logs at least one activity
+- **Full-cycle completion** — % of days all three activities are logged (bonus-star behavior)
+- **Care streak length** — consecutive days all stats stayed above zero (daily-star behavior)
+
+## How product maps to engineering
+
+| Product need | How it's built |
+|--------------|----------------|
+| Calm UI on e-ink | `DisplayTask`, ~100ms refresh, mutex around display |
+| Correct habit timing offline | `LogicTask` + depletion intervals; sleep applies elapsed depletion |
+| Motivation loop | `checkAndGrantStars`, logging flags, store in `store_purchasing` |
+| Low power without losing stakes | `SleepTask` / 5 min inactivity; wake on encoder |
+| Durable save on flash | `StorageTask`, queued writes, `pet_state.json` |
+
+Full hardware, architecture, build, and debug guide → **[docs/ENGINEERING.md](docs/ENGINEERING.md)**
+
+## Quick start
 
 ```bash
-pio run                    # Build
-pio run -t upload          # Flash firmware
-pio run -t uploadfs        # Flash LittleFS (required on first boot)
-pio device monitor         # Serial console @ 115200 baud
+pio run && pio run -t upload && pio run -t uploadfs
 ```
 
-Or flash firmware and filesystem in one step:
-
-```bash
-./scripts/upload_all.sh
-```
-
-**First boot:** You must run `uploadfs` at least once so `data/pet_state.json` is written to LittleFS. Without it, persistence will not initialize correctly.
-
-## Developer Workflow
-
-Pomagotchi is designed for fast iteration on constrained hardware.
-
-### Serial debug console
-
-Connect at 115200 baud and type commands followed by Enter. Run `help` for the full list.
-
-| Command | Purpose |
-|---------|---------|
-| `help` | List all commands |
-| `status` | Show current stats and page |
-| `debug` | Toggle debug mode (accelerated timers) |
-| `home` / `water` / `sun` / `pet` / `store` | Navigate to a screen |
-| `left` / `right` / `enter` | Move cursor and select (headless UI control) |
-| `set_thirst <0-100>` | Set thirst level |
-| `set_sunlight <0-100>` | Set sunlight level |
-| `set_pets <0-10>` | Set affection level |
-| `set_stars <value>` | Set star count |
-| `stars` | Show total stars |
-| `proximity` | Show proximity sensor value and threshold |
-| `set_proximity <value>` | Set proximity threshold |
-| `sleep_enable` / `sleep_disable` | Toggle auto-sleep |
-| `sleep_status` | Show sleep state and inactivity timer |
-| `sleep_now` | Force light sleep |
-| `stack_info` | FreeRTOS stack high-water marks and free heap |
-
-### Debug mode
-
-Toggle with the `debug` command. When active:
-
-- Star checks run every **10 seconds** instead of 24 hours
-- Activity multipliers increase **20×** (water, sunbathing)
-- Petting increments **2×** per tick
-
-This lets you exercise full game loops in minutes instead of days.
-
-### Asset pipeline
-
-Sprite bitmaps are embedded as C arrays in `src/assets/sprites.h`. To regenerate from source PNGs:
-
-```bash
-python src/assets/convert_sprites.py
-```
-
-Requires ImageMagick (`convert`) and Python PIL.
-
-## Persistence
-
-Game state is stored as JSON at `/pet_state.json` on LittleFS. The default seed file is [`data/pet_state.json`](data/pet_state.json):
-
-```json
-{
-    "sunlight": 100,
-    "thirst": 100,
-    "petStatus": 10,
-    "stars": 10,
-    "lastStarCheckTime": 0,
-    "waterLoggedFlag": 0,
-    "sunlightLoggedFlag": 0,
-    "petLoggedFlag": 0,
-    "hats": {
-        "topHat":      { "purchased": false, "wearing": false },
-        "cowboyHat":   { "purchased": false, "wearing": false },
-        "partyHat":    { "purchased": false, "wearing": false },
-        "starHat":     { "purchased": false, "wearing": false }
-    }
-}
-```
-
-The storage task saves every 30 seconds and on stat-changing events (activity logged, hat purchased, etc.).
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| Blank stats or boot errors | Run `pio run -t uploadfs` to flash the default save file |
-| Light sensor not found | Expected if VCNL4020 is disconnected; firmware continues |
-| Battery monitor not found | Expected if LC709203F is disconnected; firmware continues |
-| Serial not responding | Confirm 115200 baud and correct USB port |
-
-## Tech Stack
-
-C++ · Arduino framework · PlatformIO · FreeRTOS · GxEPD2 · ArduinoJson · LittleFS
+Or `./scripts/upload_all.sh`. Prerequisites, serial console, and troubleshooting → [docs/ENGINEERING.md](docs/ENGINEERING.md).
