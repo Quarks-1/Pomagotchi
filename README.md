@@ -1,6 +1,6 @@
 # Pomagotchi
 
-A physical Tamagotchi-style wellness buddy — a handheld device I built for my significant other to make hydration, sunlight, and affection habits tangible through **Pommy**, a pixel-art pomeranian.
+A physical Tamagotchi-style wellness buddy — a handheld device I built for my significant other to make hydration, sun exposure, and movement habits tangible through **Pommy**, a pixel-art pomeranian.
 
 ![Pomagotchi device](docs/images/device.png)
 
@@ -8,7 +8,7 @@ A physical Tamagotchi-style wellness buddy — a handheld device I built for my 
 
 **Problem:** It is easy to forget small wellness habits, and phone apps feel abstract — they compete for attention and rarely create a lasting emotional cue.
 
-**Solution:** A dedicated bedside object where real-world care maps to Pommy’s stats over **real days** — water, sunlight, and affection — with a gentle loop of stars and cosmetic rewards.
+**Solution:** A dedicated bedside object where real-world care maps to Pommy’s stats over **real days** — hydration, sun exposure, and movement — with a gentle loop of stars and cosmetic rewards.
 
 **Proof:** [Pomagotchi demos on Imgur](https://imgur.com/a/LIptVTo) (UI, activities, gameplay). My significant other uses it **daily**; I have no usage analytics — impact is qualitative.
 
@@ -22,7 +22,7 @@ A physical Tamagotchi-style wellness buddy — a handheld device I built for my 
 
 ## Context and primary user
 
-I started Pomagotchi to give my **significant other** a “wellness buddy” — something delightful to check in on, not another checklist app. She is the **primary user**: the stats, timing, and rewards were tuned for her routines around hydration, getting outside, and moments of affection with Pommy.
+I started Pomagotchi to give my **significant other** a “wellness buddy” — something delightful to check in on, not another checklist app. She is the **primary user**: the stats, timing, and rewards were tuned for her routines around hydration, sun exposure, and movement.
 
 I owned product definition and implementation end to end: enclosure, electronics integration, firmware, and iteration from prototype to **daily driver**.
 
@@ -49,8 +49,8 @@ I traded flexibility (any phone, any habit) for **focus** (three behaviors, one 
 
 ### Goals
 
-- Make hydration, sunlight, and affection **visible and rewarding** through Pommy’s stats.
-- Create **gentle urgency** with real-time decay (multi-day sun/thirst, faster affection decay).
+- Make hydration, sun exposure, and movement **visible and rewarding** through Pommy’s stats.
+- Create **gentle urgency** with real-time decay (multi-day sun exposure/thirst, faster movement decay).
 - Reinforce consistency: **daily star** when all stats stay above zero; **bonus star** when all three activities are logged.
 - Sustain engagement via **stars → cosmetic hats** (progression through care, not monetization).
 
@@ -61,7 +61,7 @@ My significant other — daily use, qualitative feedback (see [Impact](#impact))
 ### Functional requirements (shipped)
 
 - **5-screen ring UI** — Home → Water → Sun → Pet → Store, via rotary encoder
-- **Three stats** — Sunlight and thirst (0–100), affection (0–10)
+- **Three stats** — Sun exposure and thirst (0–100), movement (0–10)
 - **Activity logging** — Water meter; sun session; petting via proximity
 - **Star economy** — Daily maintenance star + bonus for logging all three activities
 - **Cosmetic store** — Four hats, purchasable and equippable
@@ -80,10 +80,10 @@ My significant other — daily use, qualitative feedback (see [Impact](#impact))
 
 | Stat / behavior | Target |
 |-----------------|--------|
-| Sunlight | 0–100; −1 every **1.2 h** (~**5 days** from full to empty) |
-| Thirst | 0–100; same decay as sunlight |
-| Affection | 0–10; −1 every **2 h** (~**20 h** from full to empty) |
-| Daily star | Every **24 h** if sunlight, thirst, and affection are **all > 0**; check interval resets only when a star is granted |
+| Sun exposure | 0–100; −1 every **1.2 h** (~**5 days** from full to empty) |
+| Thirst | 0–100; same decay as sun exposure |
+| Movement | 0–10; −1 every **2 h** (~**20 h** from full to empty) |
+| Daily star | Every **24 h** if sun exposure, thirst, and movement are **all > 0**; check interval resets only when a star is granted |
 | Bonus star | Grant when water, sun, and pet **logging flags** are all set; flags reset after grant |
 | Sleep | **5 min** inactivity → light sleep; depletion continues while asleep |
 | Hats | Tophat **10★**, Cowboy **25★**, Party **50★**, Star **100★** |
@@ -97,13 +97,13 @@ Navigation is a fixed ring: **Home → Water → Sun → Pet → Store**, then b
 |--------|------------|-------------|
 | **Home** | Check Pommy’s overall state | Status at a glance; jump to any activity |
 | **Water** | Hydration | Enter logging mode, fill a meter with the encoder, exit to apply thirst |
-| **Sun** | Sunlight / time outside | Fill via encoder; ambient light can advance progress while sunbathing when the sensor is present |
-| **Pet** | Affection / touch | Proximity detects a petting gesture; encoder adjusts affection only in debug mode |
+| **Sun** | Sun exposure | Fill via encoder; ambient light can advance progress while sunbathing when the sensor is present |
+| **Pet** | Movement | Proximity detects a petting gesture; encoder adjusts movement only in debug mode |
 | **Store** | Long-term motivation | Spend stars on hats; equip favorites on Pommy |
 
 ## Reward economy
 
-**Daily star (maintenance):** Once per 24 hours, if sunlight, thirst, and affection are all above zero, Pommy earns a star. If any stat is at zero, the device keeps checking on the same interval until stats recover — the timer does not reset until a star is actually awarded.
+**Daily star (maintenance):** Once per 24 hours, if sun exposure, thirst, and movement are all above zero, Pommy earns a star. If any stat is at zero, the device keeps checking on the same interval until stats recover — the timer does not reset until a star is actually awarded.
 
 **Bonus star (completion):** Logging water, sun, and pet each sets a flag. When all three flags are set, Pommy earns an extra star and the flags reset.
 
@@ -111,9 +111,9 @@ Navigation is a fixed ring: **Home → Water → Sun → Pet → Store**, then b
 
 ```mermaid
 flowchart LR
-  realLife[Real habits water sun affection]
+  realLife[Hydration sun exposure movement]
   log[Log via encoder and sensors]
-  stats[Stats sunlight thirst affection]
+  stats[Stats sun exposure thirst movement]
   decay[Time decay including sleep]
   stars[Stars daily plus activity bonus]
   store[Hats cosmetics]
