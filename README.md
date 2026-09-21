@@ -139,9 +139,11 @@ I went from a simple intent — a wellness buddy for my significant other — th
 
 She uses Pomagotchi every day. I did not instrument analytics; the outcome I care about is whether the device supports her habits and feels worth picking up.
 
-> **[QUOTE PENDING]** — Significant other's feedback on what Pomagotchi changed for their routine. *(Replace before sharing externally.)*
+> “I like Pomagotchi since the experience is different from my phone. The zero brightness e-ink screen means I can use it at night without impacting my sleep, and the different metrics reflect the habits I need help building (namely drinking enough water and getting enough sun in cloudy Seattle).”
+> — Primary user (significant other)
 
-> **[QUOTE PENDING]** — Significant other's feedback on what they enjoy most about caring for Pommy. *(Replace before sharing externally.)*
+> “I love how simple the experience of using Pomagotchi is. Having clear goals to ‘save up’ for keeps me coming back, but the simple and short nature of the different resource meters means I don't play with it too long.”
+> — Primary user (significant other)
 
 ## If this were scaled
 
